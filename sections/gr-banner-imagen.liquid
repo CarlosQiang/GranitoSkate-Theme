@@ -1,0 +1,386 @@
+{% comment %}
+  @name: GR Banner de Imagen
+  @description: Banner de imagen personalizable con texto superpuesto
+  @author: v0
+{% endcomment %}
+
+<div class="gr-banner-imagen" data-section-id="{{ section.id }}" data-section-type="banner-imagen">
+  <div class="gr-banner-container">
+    <div class="gr-banner-imagen-wrapper" style="height: {{ section.settings.banner_height }}px;">
+      {% if section.settings.image != blank %}
+        <img 
+          srcset="
+            {{ section.settings.image | img_url: '400x' }} 400w,
+            {{ section.settings.image | img_url: '600x' }} 600w,
+            {{ section.settings.image | img_url: '800x' }} 800w,
+            {{ section.settings.image | img_url: '1200x' }} 1200w,
+            {{ section.settings.image | img_url: '1600x' }} 1600w,
+            {{ section.settings.image | img_url: '2000x' }} 2000w
+          "
+          src="{{ section.settings.image | img_url: '1200x' }}"
+          sizes="100vw"
+          alt="{{ section.settings.image.alt | default: shop.name }}"
+          loading="eager"
+          width="{{ section.settings.image.width }}"
+          height="{{ section.settings.image.height }}"
+          class="gr-banner-imagen-img"
+        >
+      {% else %}
+        <div class="gr-banner-imagen-placeholder">
+          {{ 'lifestyle-1' | placeholder_svg_tag: 'placeholder-svg' }}
+        </div>
+      {% endif %}
+      
+      {% if section.settings.show_overlay %}
+        <div class="gr-banner-imagen-overlay" style="background-color: {{ section.settings.overlay_color }}; opacity: {{ section.settings.overlay_opacity | divided_by: 100.0 }};"></div>
+      {% endif %}
+      
+      <div class="gr-banner-imagen-content {% if section.settings.content_alignment == 'center' %}gr-banner-imagen-content--center{% elsif section.settings.content_alignment == 'right' %}gr-banner-imagen-content--right{% else %}gr-banner-imagen-content--left{% endif %}">
+        <div class="page-width">
+          <div class="gr-banner-imagen-text-container">
+            {% if section.settings.title != blank %}
+              <h2 class="gr-banner-imagen-title" style="font-size: {{ section.settings.title_size }}px; color: {{ section.settings.title_color }};">
+                {{ section.settings.title | escape }}
+              </h2>
+            {% endif %}
+            
+            {% if section.settings.subtitle != blank %}
+              <div class="gr-banner-imagen-subtitle" style="font-size: {{ section.settings.subtitle_size }}px; color: {{ section.settings.subtitle_color }};">
+                {{ section.settings.subtitle }}
+              </div>
+            {% endif %}
+            
+            {% if section.settings.button_label != blank %}
+              <div class="gr-banner-imagen-button-container">
+                <a href="{{ section.settings.button_link | default: '#' }}" class="gr-banner-imagen-button" style="background-color: {{ section.settings.button_background_color }}; color: {{ section.settings.button_text_color }};">
+                  {{ section.settings.button_label | escape }}
+                </a>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .gr-banner-imagen {
+    position: relative;
+    margin-bottom: {{ section.settings.margin_bottom }}px;
+  }
+  
+  .gr-banner-imagen-wrapper {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+  }
+  
+  .gr-banner-imagen-img {
+    width: 100%;
+    height: 100%;
+    object-fit: {{ section.settings.image_fit }};
+    object-position: {{ section.settings.image_position }};
+  }
+  
+  .gr-banner-imagen-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f5f5f5;
+  }
+  
+  .gr-banner-imagen-placeholder .placeholder-svg {
+    width: 50%;
+    height: 50%;
+  }
+  
+  .gr-banner-imagen-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+  
+  .gr-banner-imagen-content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+  }
+  
+  .gr-banner-imagen-content--center .gr-banner-imagen-text-container {
+    text-align: center;
+    margin: 0 auto;
+  }
+  
+  .gr-banner-imagen-content--right .gr-banner-imagen-text-container {
+    text-align: right;
+    margin-left: auto;
+  }
+  
+  .gr-banner-imagen-text-container {
+    max-width: {{ section.settings.content_width }}px;
+    padding: 20px;
+  }
+  
+  .gr-banner-imagen-title {
+    margin: 0 0 15px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+  
+  .gr-banner-imagen-subtitle {
+    margin: 0 0 20px;
+    line-height: 1.5;
+  }
+  
+  .gr-banner-imagen-button {
+    display: inline-block;
+    padding: 12px 24px;
+    border-radius: 4px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: opacity 0.3s ease;
+  }
+  
+  .gr-banner-imagen-button:hover {
+    opacity: 0.9;
+  }
+  
+  @media screen and (max-width: 749px) {
+    .gr-banner-imagen-wrapper {
+      height: {{ section.settings.banner_height_mobile }}px !important;
+    }
+    
+    .gr-banner-imagen-title {
+      font-size: {{ section.settings.title_size | times: 0.7 }}px !important;
+    }
+    
+    .gr-banner-imagen-subtitle {
+      font-size: {{ section.settings.subtitle_size | times: 0.8 }}px !important;
+    }
+  }
+</style>
+
+{% schema %}
+{
+  "name": "GR Banner de Imagen",
+  "settings": [
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Imagen"
+    },
+    {
+      "type": "range",
+      "id": "banner_height",
+      "min": 200,
+      "max": 800,
+      "step": 20,
+      "unit": "px",
+      "label": "Altura del banner (escritorio)",
+      "default": 500
+    },
+    {
+      "type": "range",
+      "id": "banner_height_mobile",
+      "min": 100,
+      "max": 600,
+      "step": 20,
+      "unit": "px",
+      "label": "Altura del banner (móvil)",
+      "default": 300
+    },
+    {
+      "type": "select",
+      "id": "image_fit",
+      "label": "Ajuste de imagen",
+      "options": [
+        {
+          "value": "cover",
+          "label": "Cubrir"
+        },
+        {
+          "value": "contain",
+          "label": "Contener"
+        }
+      ],
+      "default": "cover"
+    },
+    {
+      "type": "select",
+      "id": "image_position",
+      "label": "Posición de imagen",
+      "options": [
+        {
+          "value": "center center",
+          "label": "Centro"
+        },
+        {
+          "value": "top center",
+          "label": "Superior"
+        },
+        {
+          "value": "bottom center",
+          "label": "Inferior"
+        },
+        {
+          "value": "center left",
+          "label": "Izquierda"
+        },
+        {
+          "value": "center right",
+          "label": "Derecha"
+        }
+      ],
+      "default": "center center"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_overlay",
+      "label": "Mostrar superposición",
+      "default": true
+    },
+    {
+      "type": "color",
+      "id": "overlay_color",
+      "label": "Color de superposición",
+      "default": "#000000"
+    },
+    {
+      "type": "range",
+      "id": "overlay_opacity",
+      "min": 0,
+      "max": 90,
+      "step": 5,
+      "unit": "%",
+      "label": "Opacidad de superposición",
+      "default": 30
+    },
+    {
+      "type": "header",
+      "content": "Contenido"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Título",
+      "default": "Título del banner"
+    },
+    {
+      "type": "range",
+      "id": "title_size",
+      "min": 20,
+      "max": 80,
+      "step": 2,
+      "unit": "px",
+      "label": "Tamaño del título",
+      "default": 48
+    },
+    {
+      "type": "color",
+      "id": "title_color",
+      "label": "Color del título",
+      "default": "#ffffff"
+    },
+    {
+      "type": "richtext",
+      "id": "subtitle",
+      "label": "Subtítulo",
+      "default": "<p>Añade un subtítulo descriptivo aquí</p>"
+    },
+    {
+      "type": "range",
+      "id": "subtitle_size",
+      "min": 14,
+      "max": 40,
+      "step": 1,
+      "unit": "px",
+      "label": "Tamaño del subtítulo",
+      "default": 18
+    },
+    {
+      "type": "color",
+      "id": "subtitle_color",
+      "label": "Color del subtítulo",
+      "default": "#ffffff"
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "Texto del botón",
+      "default": "Comprar ahora"
+    },
+    {
+      "type": "url",
+      "id": "button_link",
+      "label": "Enlace del botón"
+    },
+    {
+      "type": "color",
+      "id": "button_background_color",
+      "label": "Color de fondo del botón",
+      "default": "#d29a43"
+    },
+    {
+      "type": "color",
+      "id": "button_text_color",
+      "label": "Color de texto del botón",
+      "default": "#ffffff"
+    },
+    {
+      "type": "select",
+      "id": "content_alignment",
+      "label": "Alineación del contenido",
+      "options": [
+        {
+          "value": "left",
+          "label": "Izquierda"
+        },
+        {
+          "value": "center",
+          "label": "Centro"
+        },
+        {
+          "value": "right",
+          "label": "Derecha"
+        }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "range",
+      "id": "content_width",
+      "min": 300,
+      "max": 1200,
+      "step": 50,
+      "unit": "px",
+      "label": "Ancho del contenido",
+      "default": 600
+    },
+    {
+      "type": "range",
+      "id": "margin_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "unit": "px",
+      "label": "Margen inferior",
+      "default": 0
+    }
+  ],
+  "presets": [
+    {
+      "name": "GR Banner de Imagen",
+      "category": "Imagen"
+    }
+  ]
+}
+{% endschema %}

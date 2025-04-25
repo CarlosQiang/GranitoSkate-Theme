@@ -1,0 +1,582 @@
+{% comment %}
+  @name: Spots Catalog
+  @description: Display skateboarding spots with filtering and sorting options
+  @author: v0
+{% endcomment %}
+
+<div class="gr-spots-catalog" data-section-id="{{ section.id }}" data-section-type="spots-catalog">
+  <div class="page-width">
+    {% if section.settings.title != blank %}
+      <div class="section-header text-center">
+        <h2 class="h1">{{ section.settings.title | escape }}</h2>
+        {% if section.settings.description != blank %}
+          <div class="rte">{{ section.settings.description }}</div>
+        {% endif %}
+      </div>
+    {% endif %}
+
+    <div class="gr-spots-toolbar">
+      {% if section.settings.enable_filtering %}
+        <div class="gr-spots-filters">
+          <div class="gr-spots-filter">
+            <label for="spot-type-filter">Type:</label>
+            <select id="spot-type-filter" class="gr-spots-filter-select">
+              <option value="all">All Types</option>
+              <option value="park">Skatepark</option>
+              <option value="street">Street Spot</option>
+              <option value="bowl">Bowl</option>
+              <option value="vert">Vert Ramp</option>
+            </select>
+          </div>
+          
+          <div class="gr-spots-filter">
+            <label for="spot-difficulty-filter">Difficulty:</label>
+            <select id="spot-difficulty-filter" class="gr-spots-filter-select">
+              <option value="all">All Levels</option>
+              <option value="beginner">Beginner</option>
+              <option value="intermediate">Intermediate</option>
+              <option value="advanced">Advanced</option>
+              <option value="pro">Pro</option>
+            </select>
+          </div>
+        </div>
+      {% endif %}
+      
+      {% if section.settings.enable_sorting %}
+        <div class="gr-spots-sorting">
+          <label for="spot-sort">Sort by:</label>
+          <select id="spot-sort" class="gr-spots-sort-select">
+            <option value="name-asc">Name (A-Z)</option>
+            <option value="name-desc">Name (Z-A)</option>
+            <option value="rating-desc">Rating (High to Low)</option>
+            <option value="rating-asc">Rating (Low to High)</option>
+          </select>
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="gr-spots-grid" id="gr-spots-grid">
+      {% for i in (1..12) %}
+        {% assign mod = i | modulo: 4 %}
+        {% if mod == 1 %}
+          {% assign spot_type = "park" %}
+          {% assign difficulty = "beginner" %}
+          {% assign rating = 4.5 %}
+        {% elsif mod == 2 %}
+          {% assign spot_type = "street" %}
+          {% assign difficulty = "intermediate" %}
+          {% assign rating = 4.0 %}
+        {% elsif mod == 3 %}
+          {% assign spot_type = "bowl" %}
+          {% assign difficulty = "advanced" %}
+          {% assign rating = 4.8 %}
+        {% else %}
+          {% assign spot_type = "vert" %}
+          {% assign difficulty = "pro" %}
+          {% assign rating = 5.0 %}
+        {% endif %}
+        
+        <div class="gr-spot-card" data-type="{{ spot_type }}" data-difficulty="{{ difficulty }}" data-rating="{{ rating }}">
+          <div class="gr-spot-card__image">
+            {{ 'lifestyle-' | append: forloop.index | placeholder_svg_tag: 'placeholder-svg' }}
+            <div class="gr-spot-card__badges">
+              <span class="gr-spot-card__badge gr-spot-card__badge--type">{{ spot_type }}</span>
+              <span class="gr-spot-card__badge gr-spot-card__badge--difficulty">{{ difficulty }}</span>
+            </div>
+          </div>
+          <div class="gr-spot-card__content">
+            <h3 class="gr-spot-card__title">Skate Spot {{ forloop.index }}</h3>
+            <div class="gr-spot-card__location">City, Country</div>
+            <div class="gr-spot-card__rating">
+              <div class="gr-spot-card__stars" style="--rating: {{ rating }}"></div>
+              <span class="gr-spot-card__rating-text">{{ rating }}</span>
+            </div>
+            <p class="gr-spot-card__description">
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam in dui mauris.
+            </p>
+            <a href="#" class="gr-spot-card__link">View details</a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+    
+    <div class="gr-spots-pagination">
+      <button class="gr-spots-pagination__button gr-spots-pagination__button--prev" disabled>Previous</button>
+      <div class="gr-spots-pagination__pages">
+        <button class="gr-spots-pagination__page gr-spots-pagination__page--active">1</button>
+        <button class="gr-spots-pagination__page">2</button>
+      </div>
+      <button class="gr-spots-pagination__button gr-spots-pagination__button--next">Next</button>
+    </div>
+  </div>
+</div>
+
+<style>
+  .gr-spots-catalog {
+    padding: 60px 0;
+    background-color: {{ section.settings.background_color }};
+  }
+  
+  .gr-spots-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+  }
+  
+  .gr-spots-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+  
+  .gr-spots-filter {
+    display: flex;
+    align-items: center;
+  }
+  
+  .gr-spots-filter label {
+    margin-right: 8px;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  
+  .gr-spots-filter-select,
+  .gr-spots-sort-select {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: #fff;
+    font-size: 14px;
+  }
+  
+  .gr-spots-sorting {
+    display: flex;
+    align-items: center;
+    margin-top: 15px;
+  }
+  
+  @media screen and (min-width: 750px) {
+    .gr-spots-sorting {
+      margin-top: 0;
+    }
+  }
+  
+  .gr-spots-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+  
+  @media screen and (min-width: 750px) {
+    .gr-spots-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  @media screen and (min-width: 990px) {
+    .gr-spots-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  
+  .gr-spot-card {
+    display: flex;
+    flex-direction: column;
+    background-color: #ffffff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .gr-spot-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  }
+  
+  .gr-spot-card__image {
+    position: relative;
+    padding-bottom: 66%;
+    overflow: hidden;
+  }
+  
+  .gr-spot-card__image img,
+  .gr-spot-card__image .placeholder-svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .gr-spot-card__badges {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    display: flex;
+    gap: 5px;
+  }
+  
+  .gr-spot-card__badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: capitalize;
+  }
+  
+  .gr-spot-card__badge--type {
+    background-color: #3498db;
+    color: #ffffff;
+  }
+  
+  .gr-spot-card__badge--difficulty {
+    background-color: #e74c3c;
+    color: #ffffff;
+  }
+  
+  .gr-spot-card__content {
+    padding: 20px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .gr-spot-card__title {
+    margin: 0 0 5px;
+    font-size: 18px;
+    font-weight: 600;
+    color: {{ section.settings.title_color }};
+  }
+  
+  .gr-spot-card__location {
+    margin-bottom: 10px;
+    font-size: 14px;
+    color: #666666;
+  }
+  
+  .gr-spot-card__rating {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+  }
+  
+  .gr-spot-card__stars {
+    position: relative;
+    display: inline-block;
+    color: #ddd;
+    width: 80px;
+    height: 16px;
+    margin-right: 5px;
+  }
+  
+  .gr-spot-card__stars::before {
+    content: "★★★★★";
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+  
+  .gr-spot-card__stars::after {
+    content: "★★★★★";
+    position: absolute;
+    top: 0;
+    left: 0;
+    color: #f1c40f;
+    width: calc(var(--rating) / 5 * 100%);
+    overflow: hidden;
+  }
+  
+  .gr-spot-card__rating-text {
+    font-size: 14px;
+    font-weight: 500;
+  }
+  
+  .gr-spot-card__description {
+    margin-bottom: 15px;
+    font-size: 14px;
+    color: #333333;
+    flex-grow: 1;
+  }
+  
+  .gr-spot-card__link {
+    display: inline-block;
+    font-size: 14px;
+    font-weight: 500;
+    color: {{ section.settings.link_color }};
+    text-decoration: none;
+    margin-top: auto;
+  }
+  
+  .gr-spot-card__link:hover {
+    text-decoration: underline;
+  }
+  
+  .gr-spots-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 40px;
+  }
+  
+  .gr-spots-pagination__button {
+    padding: 8px 16px;
+    background-color: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  
+  .gr-spots-pagination__button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  .gr-spots-pagination__pages {
+    display: flex;
+    margin: 0 10px;
+  }
+  
+  .gr-spots-pagination__page {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #ddd;
+    background-color: #fff;
+    margin: 0 5px;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  
+  .gr-spots-pagination__page--active {
+    background-color: {{ section.settings.link_color }};
+    color: #fff;
+    border-color: {{ section.settings.link_color }};
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const spotsGrid = document.getElementById('gr-spots-grid');
+    const spotCards = spotsGrid.querySelectorAll('.gr-spot-card');
+    const typeFilter = document.getElementById('spot-type-filter');
+    const difficultyFilter = document.getElementById('spot-difficulty-filter');
+    const sortSelect = document.getElementById('spot-sort');
+    const spotsPerPage = {{ section.settings.spots_per_page }};
+    
+    let currentPage = 1;
+    let filteredSpots = [...spotCards];
+    
+    // Filter spots based on selected filters
+    function filterSpots() {
+      const selectedType = typeFilter ? typeFilter.value : 'all';
+      const selectedDifficulty = difficultyFilter ? difficultyFilter.value : 'all';
+      
+      filteredSpots = [...spotCards].filter(spot => {
+        const spotType = spot.dataset.type;
+        const spotDifficulty = spot.dataset.difficulty;
+        
+        const typeMatch = selectedType === 'all' || spotType === selectedType;
+        const difficultyMatch = selectedDifficulty === 'all' || spotDifficulty === selectedDifficulty;
+        
+        return typeMatch && difficultyMatch;
+      });
+      
+      sortSpots();
+      updatePagination();
+      showPage(1);
+    }
+    
+    // Sort spots based on selected sort option
+    function sortSpots() {
+      const sortOption = sortSelect ? sortSelect.value : 'name-asc';
+      
+      filteredSpots.sort((a, b) => {
+        const nameA = a.querySelector('.gr-spot-card__title').textContent;
+        const nameB = b.querySelector('.gr-spot-card__title').textContent;
+        const ratingA = parseFloat(a.dataset.rating);
+        const ratingB = parseFloat(b.dataset.rating);
+        
+        if (sortOption === 'name-asc') {
+          return nameA.localeCompare(nameB);
+        } else if (sortOption === 'name-desc') {
+          return nameB.localeCompare(nameA);
+        } else if (sortOption === 'rating-desc') {
+          return ratingB - ratingA;
+        } else if (sortOption === 'rating-asc') {
+          return ratingA - ratingB;
+        }
+        
+        return 0;
+      });
+      
+      // Reorder spots in the DOM
+      filteredSpots.forEach(spot => {
+        spotsGrid.appendChild(spot);
+      });
+    }
+    
+    // Update pagination based on filtered spots
+    function updatePagination() {
+      const totalPages = Math.ceil(filteredSpots.length / spotsPerPage);
+      const paginationPages = document.querySelector('.gr-spots-pagination__pages');
+      const prevButton = document.querySelector('.gr-spots-pagination__button--prev');
+      const nextButton = document.querySelector('.gr-spots-pagination__button--next');
+      
+      // Clear existing page buttons
+      paginationPages.innerHTML = '';
+      
+      // Create page buttons
+      for (let i = 1; i <= totalPages; i++) {
+        const pageButton = document.createElement('button');
+        pageButton.className = `gr-spots-pagination__page${i === 1 ? ' gr-spots-pagination__page--active' : ''}`;
+        pageButton.textContent = i;
+        pageButton.addEventListener('click', () => showPage(i));
+        paginationPages.appendChild(pageButton);
+      }
+      
+      // Update prev/next buttons
+      prevButton.disabled = true;
+      nextButton.disabled = totalPages <= 1;
+      
+      // Add event listeners to prev/next buttons
+      prevButton.onclick = () => {
+        if (currentPage > 1) {
+          showPage(currentPage - 1);
+        }
+      };
+      
+      nextButton.onclick = () => {
+        if (currentPage < totalPages) {
+          showPage(currentPage + 1);
+        }
+      };
+    }
+    
+    // Show specific page
+    function showPage(page) {
+      currentPage = page;
+      
+      const startIndex = (page - 1) * spotsPerPage;
+      const endIndex = startIndex + spotsPerPage;
+      
+      // Hide all spots
+      spotCards.forEach(spot => {
+        spot.style.display = 'none';
+      });
+      
+      // Show spots for current page
+      filteredSpots.slice(startIndex, endIndex).forEach(spot => {
+        spot.style.display = 'flex';
+      });
+      
+      // Update active page button
+      const pageButtons = document.querySelectorAll('.gr-spots-pagination__page');
+      pageButtons.forEach((button, index) => {
+        if (index + 1 === page) {
+          button.classList.add('gr-spots-pagination__page--active');
+        } else {
+          button.classList.remove('gr-spots-pagination__page--active');
+        }
+      });
+      
+      // Update prev/next buttons
+      const prevButton = document.querySelector('.gr-spots-pagination__button--prev');
+      const nextButton = document.querySelector('.gr-spots-pagination__button--next');
+      const totalPages = Math.ceil(filteredSpots.length / spotsPerPage);
+      
+      prevButton.disabled = page === 1;
+      nextButton.disabled = page === totalPages;
+    }
+    
+    // Add event listeners
+    if (typeFilter) {
+      typeFilter.addEventListener('change', filterSpots);
+    }
+    
+    if (difficultyFilter) {
+      difficultyFilter.addEventListener('change', filterSpots);
+    }
+    
+    if (sortSelect) {
+      sortSelect.addEventListener('change', sortSpots);
+    }
+    
+    // Initialize
+    filterSpots();
+  });
+</script>
+
+{% schema %}
+{
+  "name": "Spots Catalog",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title",
+      "default": "Skate Spots"
+    },
+    {
+      "type": "richtext",
+      "id": "description",
+      "label": "Description"
+    },
+    {
+      "type": "range",
+      "id": "spots_per_page",
+      "min": 3,
+      "max": 12,
+      "step": 3,
+      "label": "Spots per page",
+      "default": 6
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_filtering",
+      "label": "Enable filtering",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_sorting",
+      "label": "Enable sorting",
+      "default": true
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "title_color",
+      "label": "Title color",
+      "default": "#333333"
+    },
+    {
+      "type": "color",
+      "id": "link_color",
+      "label": "Link color",
+      "default": "#c5a14d"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Spots Catalog",
+      "category": "Granito"
+    }
+  ]
+}
+{% endschema %}

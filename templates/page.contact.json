@@ -1,0 +1,66 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "main": {
+      "type": "main-page",
+      "settings": {
+        "padding_top": 36,
+        "padding_bottom": 36
+      }
+    },
+    "form": {
+      "type": "contact-form",
+      "disabled": true,
+      "settings": {
+        "heading": "",
+        "heading_size": "h1",
+        "color_scheme": "scheme-1",
+        "padding_top": 36,
+        "padding_bottom": 36
+      }
+    },
+    "gr_contact_nik8XU": {
+      "type": "gr-contact",
+      "name": "GR Contacto",
+      "settings": {
+        "title": "Contacto",
+        "description": "<p>Estamos aquí para ayudarte. Ponte en contacto con nosotros para cualquier consulta o sugerencia.</p>",
+        "form_title": "Envíanos un mensaje",
+        "name_label": "Nombre",
+        "email_label": "Email",
+        "phone_label": "Teléfono (opcional)",
+        "subject_label": "Asunto",
+        "message_label": "Mensaje",
+        "submit_text": "Enviar mensaje",
+        "success_message": "¡Gracias por tu mensaje! Te responderemos lo antes posible.",
+        "info_title": "Información de contacto",
+        "address_title": "Dirección",
+        "address": "",
+        "phone_title": "Teléfono",
+        "phone": "",
+        "email_title": "Email",
+        "email": "",
+        "hours_title": "Horario",
+        "hours": "",
+        "show_social": true,
+        "social_title": "Síguenos",
+        "show_map": true,
+        "map_title": "Encuéntranos",
+        "map_embed": ""
+      }
+    }
+  },
+  "order": [
+    "main",
+    "form",
+    "gr_contact_nik8XU"
+  ]
+}

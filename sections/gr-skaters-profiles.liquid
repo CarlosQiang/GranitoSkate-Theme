@@ -1,0 +1,671 @@
+{% comment %}
+  Sección de perfiles de skaters
+{% endcomment %}
+
+<div class="gr-skaters-section" id="gr-skaters-container">
+  <div class="page-width">
+    {% if section.settings.title != blank %}
+      <h2 class="gr-section-title">{{ section.settings.title }}</h2>
+    {% endif %}
+    
+    {% if section.settings.description != blank %}
+      <div class="gr-section-description">{{ section.settings.description }}</div>
+    {% endif %}
+    
+    <div class="gr-skaters-loading">Cargando skaters...</div>
+    
+    <div class="gr-skaters-filters" style="display: none;">
+      <div class="gr-filters-container">
+        <label for="gr-filter-style">Filtrar por estilo:</label>
+        <select id="gr-filter-style" class="gr-filter-select">
+          <option value="">Todos los estilos</option>
+          &lt;!-- Las opciones se cargarán dinámicamente -->
+        </select>
+      </div>
+      
+      <div class="gr-filters-container">
+        <label for="gr-filter-location">Filtrar por ubicación:</label>
+        <select id="gr-filter-location" class="gr-filter-select">
+          <option value="">Todas las ubicaciones</option>
+          &lt;!-- Las opciones se cargarán dinámicamente -->
+        </select>
+      </div>
+      
+      <div class="gr-filters-container">
+        <label for="gr-search-skater">Buscar:</label>
+        <input type="text" id="gr-search-skater" placeholder="Nombre del skater...">
+      </div>
+    </div>
+    
+    <div class="gr-skaters-grid" style="display: none;">
+      &lt;!-- Los perfiles de skaters se cargarán aquí dinámicamente -->
+    </div>
+    
+    <div class="gr-skaters-empty" style="display: none;">
+      <p>No se encontraron skaters que coincidan con los filtros seleccionados.</p>
+    </div>
+  </div>
+</div>
+
+<div class="gr-skater-modal" id="gr-skater-modal" style="display: none;">
+  <div class="gr-modal-content">
+    <span class="gr-modal-close">&times;</span>
+    <div class="gr-skater-detail">
+      &lt;!-- Los detalles del skater se cargarán aquí dinámicamente -->
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    if (window.granitoAPI) {
+      const skatersContainer = document.getElementById('gr-skaters-container');
+      const loadingElement = skatersContainer.querySelector('.gr-skaters-loading');
+      const filtersElement = skatersContainer.querySelector('.gr-skaters-filters');
+      const skatersGrid = skatersContainer.querySelector('.gr-skaters-grid');
+      const emptyElement = skatersContainer.querySelector('.gr-skaters-empty');
+      const skaterModal = document.getElementById('gr-skater-modal');
+      
+      // Estado
+      let allSkaters = [];
+      let filteredSkaters = [];
+      let styles = new Set();
+      let locations = new Set();
+      
+      // Cargar skaters
+      const loadSkaters = async () => {
+        try {
+          const response = await window.granitoAPI.getSkaters();
+          
+          if (response.error) {
+            loadingElement.textContent = 'Error al cargar los skaters.';
+            return;
+          }
+          
+          allSkaters = response;
+          filteredSkaters = [...allSkaters];
+          
+          // Recopilar estilos y ubicaciones para los filtros
+          allSkaters.forEach(skater => {
+            if (skater.estilo) styles.add(skater.estilo);
+            if (skater.ubicacion) locations.add(skater.ubicacion);
+          });
+          
+          // Llenar los selectores de filtros
+          const styleSelect = document.getElementById('gr-filter-style');
+          const locationSelect = document.getElementById('gr-filter-location');
+          
+          styles.forEach(style => {
+            const option = document.createElement('option');
+            option.value = style;
+            option.textContent = style;
+            styleSelect.appendChild(option);
+          });
+          
+          locations.forEach(location => {
+            const option = document.createElement('option');
+            option.value = location;
+            option.textContent = location;
+            locationSelect.appendChild(option);
+          });
+          
+          // Mostrar la interfaz
+          loadingElement.style.display = 'none';
+          filtersElement.style.display = 'flex';
+          
+          // Renderizar skaters
+          renderSkaters(filteredSkaters);
+        } catch (error) {
+          console.error('Error al cargar skaters:', error);
+          loadingElement.textContent = 'Error al cargar los skaters.';
+        }
+      };
+      
+      // Renderizar skaters en la interfaz
+      const renderSkaters = (skaters) => {
+        if (skaters.length === 0) {
+          skatersGrid.style.display = 'none';
+          emptyElement.style.display = 'block';
+          return;
+        }
+        
+        skatersGrid.style.display = 'grid';
+        emptyElement.style.display = 'none';
+        
+        let html = '';
+        
+        skaters.forEach(skater => {
+          html += `
+            <div class="gr-skater-card" data-id="${skater.id}">
+              <div class="gr-skater-image">
+                <img src="${skater.imagen_url || '/placeholder.svg?height=300&width=300'}" alt="${skater.nombre}">
+              </div>
+              <div class="gr-skater-info">
+                <h3 class="gr-skater-name">${skater.nombre}</h3>
+                ${skater.estilo ? `<div class="gr-skater-style">${skater.estilo}</div>` : ''}
+                ${skater.ubicacion ? `<div class="gr-skater-location">${skater.ubicacion}</div>` : ''}
+              </div>
+              <button class="gr-button gr-button-small gr-button-view" data-id="${skater.id}">Ver perfil</button>
+            </div>
+          `;
+        });
+        
+        skatersGrid.innerHTML = html;
+        
+        // Añadir event listeners a los botones
+        const viewButtons = skatersGrid.querySelectorAll('.gr-button-view');
+        viewButtons.forEach(button => {
+          button.addEventListener('click', function() {
+            openSkaterModal(this.dataset.id);
+          });
+        });
+      };
+      
+      // Filtrar skaters
+      const filterSkaters = () => {
+        const styleFilter = document.getElementById('gr-filter-style').value;
+        const locationFilter = document.getElementById('gr-filter-location').value;
+        const searchFilter = document.getElementById('gr-search-skater').value.toLowerCase();
+        
+        filteredSkaters = allSkaters.filter(skater => {
+          // Filtrar por estilo
+          if (styleFilter && skater.estilo !== styleFilter) return false;
+          
+          // Filtrar por ubicación
+          if (locationFilter && skater.ubicacion !== locationFilter) return false;
+          
+          // Filtrar por búsqueda
+          if (searchFilter && !skater.nombre.toLowerCase().includes(searchFilter)) return false;
+          
+          return true;
+        });
+        
+        renderSkaters(filteredSkaters);
+      };
+      
+      // Abrir modal con detalles del skater
+      const openSkaterModal = async (skaterId) => {
+        try {
+          const response = await window.granitoAPI.getSkaterDetail(skaterId);
+          
+          if (response.error) {
+            alert('Error al cargar los detalles del skater.');
+            return;
+          }
+          
+          const skater = response;
+          const skaterDetail = skaterModal.querySelector('.gr-skater-detail');
+          
+          let html = `
+            <div class="gr-skater-header">
+              <div class="gr-skater-image-large">
+                <img src="${skater.imagen_url || '/placeholder.svg?height=400&width=400'}" alt="${skater.nombre}">
+              </div>
+              <div class="gr-skater-header-info">
+                <h2 class="gr-skater-name-large">${skater.nombre}</h2>
+                ${skater.apodo ? `<div class="gr-skater-nickname">"${skater.apodo}"</div>` : ''}
+                <div class="gr-skater-meta">
+                  ${skater.edad ? `<div class="gr-skater-age"><strong>Edad:</strong> ${skater.edad} años</div>` : ''}
+                  ${skater.estilo ? `<div class="gr-skater-style-large"><strong>Estilo:</strong> ${skater.estilo}</div>` : ''}
+                  ${skater.ubicacion ? `<div class="gr-skater-location-large"><strong>Ubicación:</strong> ${skater.ubicacion}</div>` : ''}
+                </div>
+              </div>
+            </div>
+            
+            ${skater.biografia ? `
+              <div class="gr-skater-section">
+                <h3>Biografía</h3>
+                <div class="gr-skater-bio">${skater.biografia}</div>
+              </div>
+            ` : ''}
+            
+            ${skater.logros ? `
+              <div class="gr-skater-section">
+                <h3>Logros</h3>
+                <ul class="gr-skater-achievements">
+                  ${skater.logros.map(logro => `<li>${logro}</li>`).join('')}
+                </ul>
+              </div>
+            ` : ''}
+            
+            ${skater.videos && skater.videos.length > 0 ? `
+              <div class="gr-skater-section">
+                <h3>Videos</h3>
+                <div class="gr-skater-videos">
+                  ${skater.videos.map(video => `
+                    <div class="gr-skater-video">
+                      <iframe src="${video}" frameborder="0" allowfullscreen></iframe>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            ` : ''}
+            
+            ${skater.patrocinadores && skater.patrocinadores.length > 0 ? `
+              <div class="gr-skater-section">
+                <h3>Patrocinadores</h3>
+                <div class="gr-skater-sponsors">
+                  ${skater.patrocinadores.map(sponsor => `
+                    <div class="gr-skater-sponsor">
+                      <img src="${sponsor.logo_url || '/placeholder.svg?height=100&width=200'}" alt="${sponsor.nombre}">
+                      <div class="gr-sponsor-name">${sponsor.nombre}</div>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            ` : ''}
+            
+            ${skater.redes_sociales ? `
+              <div class="gr-skater-section">
+                <h3>Redes Sociales</h3>
+                <div class="gr-skater-social">
+                  ${skater.redes_sociales.instagram ? `
+                    <a href="${skater.redes_sociales.instagram}" target="_blank" class="gr-social-link gr-social-instagram">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+                      Instagram
+                    </a>
+                  ` : ''}
+                  
+                  ${skater.redes_sociales.twitter ? `
+                    <a href="${skater.redes_sociales.twitter}" target="_blank" class="gr-social-link gr-social-twitter">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path></svg>
+                      Twitter
+                    </a>
+                  ` : ''}
+                  
+                  ${skater.redes_sociales.youtube ? `
+                    <a href="${skater.redes_sociales.youtube}" target="_blank" class="gr-social-link gr-social-youtube">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-  width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"></path><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon></svg>
+                      YouTube
+                    </a>
+                  ` : ''}
+                </div>
+              </div>
+            ` : ''}
+          `;
+          
+          skaterDetail.innerHTML = html;
+          skaterModal.style.display = 'block';
+        } catch (error) {
+          console.error('Error al cargar detalles del skater:', error);
+          alert('Error al cargar los detalles del skater.');
+        }
+      };
+      
+      // Event listeners para filtros
+      document.getElementById('gr-filter-style').addEventListener('change', filterSkaters);
+      document.getElementById('gr-filter-location').addEventListener('change', filterSkaters);
+      document.getElementById('gr-search-skater').addEventListener('input', filterSkaters);
+      
+      // Event listeners para modal
+      const modalClose = skaterModal.querySelector('.gr-modal-close');
+      modalClose.addEventListener('click', () => {
+        skaterModal.style.display = 'none';
+      });
+      
+      // Cerrar modal al hacer clic fuera
+      window.addEventListener('click', (event) => {
+        if (event.target === skaterModal) {
+          skaterModal.style.display = 'none';
+        }
+      });
+      
+      // Iniciar carga de skaters
+      loadSkaters();
+    }
+  });
+</script>
+
+<style>
+  .gr-skaters-section {
+    margin: 40px 0;
+  }
+  
+  .gr-section-title {
+    text-align: center;
+    margin-bottom: 10px;
+  }
+  
+  .gr-section-description {
+    text-align: center;
+    margin-bottom: 30px;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .gr-skaters-loading {
+    text-align: center;
+    padding: 20px;
+  }
+  
+  .gr-skaters-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 30px;
+    justify-content: center;
+  }
+  
+  .gr-filters-container {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .gr-filter-select,
+  #gr-search-skater {
+    padding: 8px;
+    border: 1px solid #e5e5e5;
+    border-radius: 4px;
+    min-width: 200px;
+  }
+  
+  .gr-skaters-grid {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 20px;
+  }
+  
+  @media screen and (min-width: 750px) {
+    .gr-skaters-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  @media screen and (min-width: 990px) {
+    .gr-skaters-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  
+  .gr-skater-card {
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  
+  .gr-skater-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  .gr-skater-image {
+    height: 250px;
+    overflow: hidden;
+  }
+  
+  .gr-skater-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+  
+  .gr-skater-card:hover .gr-skater-image img {
+    transform: scale(1.05);
+  }
+  
+  .gr-skater-info {
+    padding: 15px;
+  }
+  
+  .gr-skater-name {
+    margin-top: 0;
+    margin-bottom: 5px;
+    font-size: 1.2em;
+  }
+  
+  .gr-skater-style,
+  .gr-skater-location {
+    font-size: 0.9em;
+    color: #777;
+  }
+  
+  .gr-button {
+    background-color: {{ settings.gr_color_principal }};
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    display: block;
+    width: 100%;
+    margin-top: 10px;
+  }
+  
+  .gr-button:hover {
+    background-color: {{ settings.gr_color_secundario }};
+  }
+  
+  .gr-button-small {
+    padding: 8px 12px;
+    font-size: 0.9em;
+  }
+  
+  .gr-skaters-empty {
+    text-align: center;
+    padding: 20px;
+  }
+  
+  .gr-skater-modal {
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow-y: auto;
+  }
+  
+  .gr-modal-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+  }
+  
+  .gr-modal-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 1.5em;
+    cursor: pointer;
+    z-index: 1;
+  }
+  
+  .gr-skater-header {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+  }
+  
+  @media screen and (min-width: 750px) {
+    .gr-skater-header {
+      flex-direction: row;
+      gap: 20px;
+    }
+    
+    .gr-skater-image-large {
+      width: 40%;
+    }
+    
+    .gr-skater-header-info {
+      width: 60%;
+    }
+  }
+  
+  .gr-skater-image-large {
+    margin-bottom: 20px;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  
+  .gr-skater-image-large img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  
+  .gr-skater-name-large {
+    margin-top: 0;
+    margin-bottom: 5px;
+    font-size: 1.8em;
+  }
+  
+  .gr-skater-nickname {
+    font-size: 1.2em;
+    font-style: italic;
+    margin-bottom: 15px;
+    color: {{ settings.gr_color_principal }};
+  }
+  
+  .gr-skater-meta {
+    margin-bottom: 15px;
+  }
+  
+  .gr-skater-section {
+    margin-bottom: 30px;
+  }
+  
+  .gr-skater-section h3 {
+    border-bottom: 1px solid #e5e5e5;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+  }
+  
+  .gr-skater-bio {
+    line-height: 1.6;
+  }
+  
+  .gr-skater-achievements {
+    padding-left: 20px;
+  }
+  
+  .gr-skater-achievements li {
+    margin-bottom: 5px;
+  }
+  
+  .gr-skater-videos {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+  
+  @media screen and (min-width: 750px) {
+    .gr-skater-videos {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  .gr-skater-video {
+    position: relative;
+    padding-bottom: 56.25%; /* 16:9 aspect ratio */
+    height: 0;
+    overflow: hidden;
+  }
+  
+  .gr-skater-video iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+  
+  .gr-skater-sponsors {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+  }
+  
+  @media screen and (min-width: 750px) {
+    .gr-skater-sponsors {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+  
+  .gr-skater-sponsor {
+    text-align: center;
+  }
+  
+  .gr-skater-sponsor img {
+    max-width: 100%;
+    height: auto;
+    max-height: 80px;
+    margin-bottom: 5px;
+  }
+  
+  .gr-sponsor-name {
+    font-size: 0.9em;
+  }
+  
+  .gr-skater-social {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  .gr-social-link {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    text-decoration: none;
+    color: white;
+    transition: background-color 0.2s ease;
+  }
+  
+  .gr-social-instagram {
+    background-color: #E1306C;
+  }
+  
+  .gr-social-twitter {
+    background-color: #1DA1F2;
+  }
+  
+  .gr-social-youtube {
+    background-color: #FF0000;
+  }
+  
+  .gr-social-link:hover {
+    opacity: 0.9;
+  }
+</style>
+
+{% schema %}
+{
+  "name": "GR Perfiles de Skaters",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Título de la sección",
+      "default": "Nuestros Skaters"
+    },
+    {
+      "type": "textarea",
+      "id": "description",
+      "label": "Descripción",
+      "default": "Conoce a los mejores skaters de nuestra comunidad."
+    }
+  ],
+  "presets": [
+    {
+      "name": "GR Perfiles de Skaters"
+    }
+  ]
+}
+{% endschema %}

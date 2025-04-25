@@ -1,0 +1,443 @@
+{% comment %}
+  @name: Granito Image
+  @description: Image component for easy image scaling in the admin panel
+  @author: v0
+{% endcomment %}
+
+<div class="gr-image-container" data-section-id="{{ section.id }}" data-section-type="image">
+  <div class="page-width">
+    {% if section.settings.title != blank %}
+      <div class="section-header text-{{ section.settings.text_alignment }}">
+        <h2 class="h1">{{ section.settings.title | escape }}</h2>
+        {% if section.settings.subtitle != blank %}
+          <div class="rte">{{ section.settings.subtitle }}</div>
+        {% endif %}
+      </div>
+    {% endif %}
+    
+    <div class="gr-image-wrapper" style="max-width: {{ section.settings.image_width }}px; margin-left: {{ section.settings.horizontal_alignment }}; margin-right: {{ section.settings.horizontal_alignment }};">
+      {% if section.settings.image != blank %}
+        <div 
+          class="gr-image{% if section.settings.enable_zoom %} gr-image--zoomable{% endif %}{% if section.settings.enable_shadow %} gr-image--shadow{% endif %}" 
+          style="padding-bottom: {{ section.settings.aspect_ratio }}%;"
+        >
+          <img
+            srcset="
+              {{ section.settings.image | img_url: '400x' }} 400w,
+              {{ section.settings.image | img_url: '600x' }} 600w,
+              {{ section.settings.image | img_url: '800x' }} 800w,
+              {{ section.settings.image | img_url: '1200x' }} 1200w,
+              {{ section.settings.image | img_url: '1600x' }} 1600w
+            "
+            src="{{ section.settings.image | img_url: '800x' }}"
+            sizes="(min-width: 750px) calc(100vw - 50px), 100vw"
+            alt="{{ section.settings.image.alt | escape }}"
+            width="{{ section.settings.image.width }}"
+            height="{{ section.settings.image.height }}"
+            loading="lazy"
+            class="gr-image__img{% if section.settings.enable_zoom %} gr-image__img--zoomable{% endif %}"
+            {% if section.settings.enable_zoom %}data-zoom-src="{{ section.settings.image | img_url: '2000x' }}"{% endif %}
+          >
+        </div>
+      {% else %}
+        <div class="gr-image gr-image--placeholder" style="padding-bottom: {{ section.settings.aspect_ratio }}%;">
+          {{ 'image' | placeholder_svg_tag: 'placeholder-svg' }}
+        </div>
+      {% endif %}
+      
+      {% if section.settings.image != blank and section.settings.caption != blank %}
+        <div class="gr-image-caption text-{{ section.settings.text_alignment }}">
+          {{ section.settings.caption | escape }}
+        </div>
+      {% endif %}
+    </div>
+    
+    {% if section.settings.enable_zoom %}
+      <div class="gr-image-zoom-container" id="gr-image-zoom-container-{{ section.id }}">
+        <div class="gr-image-zoom-wrapper">
+          <img src="/placeholder.svg" alt="" class="gr-image-zoom__img">
+          <button class="gr-image-zoom__close" aria-label="{{ 'general.accessibility.close' | t }}">
+            {% render 'icon-close' %}
+          </button>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<style>
+  .gr-image-container {
+    margin-bottom: {{ section.settings.margin_bottom }}px;
+    margin-top: {{ section.settings.margin_top }}px;
+  }
+  
+  .gr-image-wrapper {
+    position: relative;
+    width: 100%;
+  }
+  
+  .gr-image {
+    position: relative;
+    width: 100%;
+    height: 0;
+    overflow: hidden;
+    background-color: {{ section.settings.background_color }};
+    border-radius: {{ section.settings.border_radius }}px;
+  }
+  
+  .gr-image--shadow {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, {{ section.settings.shadow_opacity | divided_by: 100.0 }});
+  }
+  
+  .gr-image__img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: {{ section.settings.image_fit }};
+    object-position: {{ section.settings.focal_point }};
+    transition: transform 0.3s ease;
+  }
+  
+  .gr-image__img--zoomable {
+    cursor: zoom-in;
+  }
+  
+  {% if section.settings.enable_hover_effect %}
+    .gr-image:hover .gr-image__img {
+      transform: scale({{ section.settings.hover_scale | divided_by: 100.0 | plus: 1.0 }});
+    }
+  {% endif %}
+  
+  .gr-image-caption {
+    margin-top: 10px;
+    font-size: 14px;
+    color: {{ section.settings.caption_color }};
+  }
+  
+  .gr-image--placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f5f5f5;
+  }
+  
+  .gr-image--placeholder .placeholder-svg {
+    width: 50%;
+    height: 50%;
+  }
+  
+  .gr-image-zoom-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .gr-image-zoom-wrapper {
+    position: relative;
+    width: 90%;
+    height: 90%;
+    max-width: 1200px;
+  }
+  
+  .gr-image-zoom__img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  
+  .gr-image-zoom__close {
+    position: absolute;
+    top: -40px;
+    right: 0;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 5px;
+  }
+</style>
+
+{% if section.settings.enable_zoom %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const zoomableImages = document.querySelectorAll('.gr-image__img--zoomable');
+    const zoomContainer = document.getElementById('gr-image-zoom-container-{{ section.id }}');
+    const zoomImage = zoomContainer.querySelector('.gr-image-zoom__img');
+    const closeButton = zoomContainer.querySelector('.gr-image-zoom__close');
+    
+    zoomableImages.forEach(img => {
+      img.addEventListener('click', function() {
+        const zoomSrc = this.getAttribute('data-zoom-src');
+        zoomImage.src = zoomSrc;
+        zoomContainer.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+      });
+    });
+    
+    closeButton.addEventListener('click', function() {
+      zoomContainer.style.display = 'none';
+      document.body.style.overflow = '';
+    });
+    
+    zoomContainer.addEventListener('click', function(event) {
+      if (event.target === zoomContainer) {
+        zoomContainer.style.display = 'none';
+        document.body.style.overflow = '';
+      }
+    });
+    
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Escape' && zoomContainer.style.display === 'flex') {
+        zoomContainer.style.display = 'none';
+        document.body.style.overflow = '';
+      }
+    });
+  });
+</script>
+{% endif %}
+
+{% schema %}
+{
+  "name": "Granito Image",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Heading"
+    },
+    {
+      "type": "richtext",
+      "id": "subtitle",
+      "label": "Subheading"
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Image"
+    },
+    {
+      "type": "text",
+      "id": "caption",
+      "label": "Image caption"
+    },
+    {
+      "type": "range",
+      "id": "image_width",
+      "min": 200,
+      "max": 1200,
+      "step": 50,
+      "unit": "px",
+      "label": "Image width",
+      "default": 700
+    },
+    {
+      "type": "range",
+      "id": "aspect_ratio",
+      "min": 30,
+      "max": 150,
+      "step": 5,
+      "unit": "%",
+      "label": "Aspect ratio",
+      "default": 75,
+      "info": "Sets the height of the image container as a percentage of its width"
+    },
+    {
+      "type": "select",
+      "id": "horizontal_alignment",
+      "label": "Horizontal alignment",
+      "options": [
+        {
+          "value": "auto",
+          "label": "Left"
+        },
+        {
+          "value": "auto auto",
+          "label": "Center"
+        },
+        {
+          "value": "0 auto",
+          "label": "Right"
+        }
+      ],
+      "default": "auto auto"
+    },
+    {
+      "type": "select",
+      "id": "image_fit",
+      "label": "Image fit",
+      "options": [
+        {
+          "value": "cover",
+          "label": "Cover"
+        },
+        {
+          "value": "contain",
+          "label": "Contain"
+        }
+      ],
+      "default": "cover"
+    },
+    {
+      "type": "select",
+      "id": "focal_point",
+      "label": "Focal point",
+      "options": [
+        {
+          "value": "center center",
+          "label": "Center"
+        },
+        {
+          "value": "top center",
+          "label": "Top"
+        },
+        {
+          "value": "bottom center",
+          "label": "Bottom"
+        },
+        {
+          "value": "center left",
+          "label": "Left"
+        },
+        {
+          "value": "center right",
+          "label": "Right"
+        },
+        {
+          "value": "top left",
+          "label": "Top left"
+        },
+        {
+          "value": "top right",
+          "label": "Top right"
+        },
+        {
+          "value": "bottom left",
+          "label": "Bottom left"
+        },
+        {
+          "value": "bottom right",
+          "label": "Bottom right"
+        }
+      ],
+      "default": "center center"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background color",
+      "default": "#f5f5f5"
+    },
+    {
+      "type": "range",
+      "id": "border_radius",
+      "min": 0,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "label": "Border radius",
+      "default": 0
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_shadow",
+      "label": "Enable shadow",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "shadow_opacity",
+      "min": 5,
+      "max": 30,
+      "step": 5,
+      "unit": "%",
+      "label": "Shadow opacity",
+      "default": 15
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_hover_effect",
+      "label": "Enable hover effect",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "hover_scale",
+      "min": 0,
+      "max": 20,
+      "step": 1,
+      "unit": "%",
+      "label": "Hover scale",
+      "default": 5,
+      "info": "Percentage to scale the image on hover"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_zoom",
+      "label": "Enable zoom on click",
+      "default": false
+    },
+    {
+      "type": "select",
+      "id": "text_alignment",
+      "label": "Text alignment",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        },
+        {
+          "value": "right",
+          "label": "Right"
+        }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "color",
+      "id": "caption_color",
+      "label": "Caption color",
+      "default": "#666666"
+    },
+    {
+      "type": "range",
+      "id": "margin_top",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "unit": "px",
+      "label": "Top margin",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "margin_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "unit": "px",
+      "label": "Bottom margin",
+      "default": 0
+    }
+  ],
+  "presets": [
+    {
+      "name": "Granito Image",
+      "category": "Image"
+    }
+  ]
+}
+{% endschema %}

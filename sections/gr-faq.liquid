@@ -1,0 +1,155 @@
+{% comment %}
+  Sección de preguntas frecuentes
+{% endcomment %}
+
+<div class="gr-faq-section" id="gr-faq-container">
+  <div class="page-width">
+    {% if section.settings.title != blank %}
+      <h2 class="gr-section-title">{{ section.settings.title }}</h2>
+    {% endif %}
+    
+    <div class="gr-faq-loading">Cargando preguntas frecuentes...</div>
+    
+    <div class="gr-faq-empty" style="display: none;">
+      <p>No hay preguntas frecuentes disponibles.</p>
+    </div>
+    
+    <div class="gr-faq-list" style="display: none;">
+      <!-- Las preguntas frecuentes se cargarán aquí dinámicamente -->
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    if (window.granitoAPI) {
+      const faqContainer = document.getElementById('gr-faq-container');
+      const loadingElement = faqContainer.querySelector('.gr-faq-loading');
+      const emptyElement = faqContainer.querySelector('.gr-faq-empty');
+      const faqList = faqContainer.querySelector('.gr-faq-list');
+      
+      window.granitoAPI.getFAQs()
+        .then(response => {
+          loadingElement.style.display = 'none';
+          
+          if (response.error) {
+            emptyElement.innerHTML = `<p>Error al cargar las preguntas frecuentes.</p>`;
+            emptyElement.style.display = 'block';
+            return;
+          }
+          
+          if (response.length === 0) {
+            emptyElement.style.display = 'block';
+            return;
+          }
+          
+          // Crear HTML para cada pregunta frecuente
+          let faqHTML = '';
+          
+          response.forEach((faq, index) => {
+            faqHTML += `
+              <div class="gr-faq-item">
+                <button class="gr-faq-question" id="faq-question-${index}" aria-expanded="false" aria-controls="faq-answer-${index}">
+                  ${faq.pregunta}
+                  <span class="gr-faq-icon">+</span>
+                </button>
+                
+                <div class="gr-faq-answer" id="faq-answer-${index}" aria-labelledby="faq-question-${index}" hidden>
+                  ${faq.respuesta}
+                </div>
+              </div>
+            `;
+          });
+          
+          faqList.innerHTML = faqHTML;
+          faqList.style.display = 'block';
+          
+          // Añadir event listeners para los botones de preguntas
+          const faqQuestions = faqList.querySelectorAll('.gr-faq-question');
+          faqQuestions.forEach(question => {
+            question.addEventListener('click', function() {
+              const expanded = this.getAttribute('aria-expanded') === 'true';
+              const answerId = this.getAttribute('aria-controls');
+              const answer = document.getElementById(answerId);
+              
+              this.setAttribute('aria-expanded', !expanded);
+              answer.hidden = expanded;
+              
+              const icon = this.querySelector('.gr-faq-icon');
+              icon.textContent = expanded ? '+' : '-';
+            });
+          });
+        });
+    }
+  });
+</script>
+
+<style>
+  .gr-faq-section {
+    margin: 40px 0;
+  }
+  
+  .gr-section-title {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  
+  .gr-faq-loading,
+  .gr-faq-empty {
+    text-align: center;
+    padding: 20px;
+  }
+  
+  .gr-faq-list {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  .gr-faq-item {
+    border-bottom: 1px solid #e5e5e5;
+  }
+  
+  .gr-faq-question {
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    padding: 15px 0;
+    font-size: 1.1em;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .gr-faq-icon {
+    font-size: 1.5em;
+    color: {{ settings.gr_color_principal }};
+  }
+  
+  .gr-faq-answer {
+    padding: 0 0 15px;
+  }
+</style>
+
+{% schema %}
+{
+  "name": "GR Preguntas Frecuentes",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Título de la sección",
+      "default": "Preguntas Frecuentes"
+    }
+  ],
+  "presets": [
+    {
+      "name": "GR Preguntas Frecuentes"
+    }
+  ]
+}
+{% endschema %}

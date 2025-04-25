@@ -1,0 +1,60 @@
+{% comment %}
+  Tarjeta para mostrar una reseña de producto
+  Uso: {% render 'gr-product-review-card', review: review %}
+{% endcomment %}
+
+<div class="product-review-card">
+  <div class="review-header">
+    <span class="review-author">{{ review.author }}</span>
+    <div class="review-rating">
+      {% assign stars = review.rating | times: 1 %}
+      {% for i in (1..5) %}
+        {% if i &lt;= stars %}
+          <span class="star filled">★</span>
+        {% else %}
+          <span class="star">☆</span>
+        {% endif %}
+      {% endfor %}
+    </div>
+    <span class="review-date">{{ review.date | date: "%d/%m/%Y" }}</span>
+  </div>
+  <div class="review-content">{{ review.content }}</div>
+</div>
+
+<style>
+  .product-review-card {
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+  }
+  
+  .review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  
+  .review-author {
+    font-weight: bold;
+  }
+  
+  .review-rating {
+    color: {{ settings.gr_color_principal }};
+  }
+  
+  .star-filled {
+    color: {{ settings.gr_color_principal }};
+  }
+  
+  .review-content {
+    margin-bottom: 10px;
+  }
+  
+  .review-date {
+    font-size: 0.8em;
+    color: #777;
+    text-align: right;
+  }
+</style>

@@ -1,0 +1,359 @@
+<div class="section-product-reviews">
+  <div class="container">
+    <h2 class="section-title">{{ section.settings.title }}</h2>
+    
+    <div id="product-reviews" data-product-id="{{ product.id }}">
+      {% comment %}
+        Sección de reseñas de productos
+      {% endcomment %}
+
+      <div class="gr-reviews-section" id="gr-reviews-container" data-product-id="{{ product.id }}">
+        <div class="page-width">
+          {% if section.settings.title != blank %}
+            <h2 class="gr-section-title">{{ section.settings.title }}</h2>
+          {% endif %}
+          
+          <div class="gr-reviews-summary">
+            <div class="gr-reviews-loading">Cargando reseñas...</div>
+            <div class="gr-reviews-stats" style="display: none;">
+              <div class="gr-reviews-average">
+                <span class="gr-average-rating">0</span>
+                <div class="gr-average-stars">
+                  <span class="gr-star">☆</span>
+                  <span class="gr-star">☆</span>
+                  <span class="gr-star">☆</span>
+                  <span class="gr-star">☆</span>
+                  <span class="gr-star">☆</span>
+                </div>
+                <div class="gr-reviews-count">0 reseñas</div>
+              </div>
+            </div>
+          </div>
+          
+          {% if section.settings.show_form %}
+            <div class="gr-review-form-container">
+              <h3>Escribe una reseña</h3>
+              <form id="gr-review-form" class="gr-review-form">
+                <div class="gr-form-field">
+                  <label for="gr-review-name">Nombre</label>
+                  <input type="text" id="gr-review-name" name="nombre_cliente" required>
+                </div>
+                
+                <div class="gr-form-field">
+                  <label for="gr-review-rating">Valoración</label>
+                  <div class="gr-rating-input">
+                    <input type="radio" id="gr-star-5" name="valoracion" value="5" required>
+                    <label for="gr-star-5">★</label>
+                    <input type="radio" id="gr-star-4" name="valoracion" value="4">
+                    <label for="gr-star-4">★</label>
+                    <input type="radio" id="gr-star-3" name="valoracion" value="3">
+                    <label for="gr-star-3">★</label>
+                    <input type="radio" id="gr-star-2" name="valoracion" value="2">
+                    <label for="gr-star-2">★</label>
+                    <input type="radio" id="gr-star-1" name="valoracion" value="1">
+                    <label for="gr-star-1">★</label>
+                  </div>
+                </div>
+                
+                <div class="gr-form-field">
+                  <label for="gr-review-comment">Comentario (opcional)</label>
+                  <textarea id="gr-review-comment" name="comentario" rows="4"></textarea>
+                </div>
+                
+                <input type="hidden" name="id_producto" value="{{ product.id }}">
+                
+                <button type="submit" class="gr-submit-button">Enviar reseña</button>
+              </form>
+            </div>
+          {% endif %}
+          
+          <div class="gr-reviews-list" style="display: none;">
+            &lt;!-- Las reseñas se cargarán aquí dinámicamente -->
+          </div>
+        </div>
+      </div>
+
+      <script>
+        document.addEventListener('DOMContentLoaded', function() {
+          if (window.granitoAPI) {
+            const reviewsContainer = document.getElementById('gr-reviews-container');
+            const productId = reviewsContainer.dataset.productId;
+            const loadingElement = reviewsContainer.querySelector('.gr-reviews-loading');
+            const statsElement = reviewsContainer.querySelector('.gr-reviews-stats');
+            const reviewsList = reviewsContainer.querySelector('.gr-reviews-list');
+            const reviewForm = document.getElementById('gr-review-form');
+            
+            // Cargar reseñas
+            window.granitoAPI.getProductReviews(productId)
+              .then(response => {
+                loadingElement.style.display = 'none';
+                statsElement.style.display = 'flex';
+                
+                if (response.error) {
+                  reviewsList.innerHTML = '<p>Error al cargar las reseñas.</p>';
+                  reviewsList.style.display = 'block';
+                  return;
+                }
+                
+                if (response.length === 0) {
+                  reviewsList.innerHTML = '<p>No hay reseñas para este producto.</p>';
+                  reviewsList.style.display = 'block';
+                  return;
+                }
+                
+                // Calcular valoración media
+                let totalRating = 0;
+                response.forEach(review => {
+                  totalRating += review.valoracion;
+                });
+                
+                const averageRating = totalRating / response.length;
+                const averageRatingElement = statsElement.querySelector('.gr-average-rating');
+                const reviewsCountElement = statsElement.querySelector('.gr-reviews-count');
+                const starsElement = statsElement.querySelector('.gr-average-stars');
+                
+                averageRatingElement.textContent = averageRating.toFixed(1);
+                reviewsCountElement.textContent = `${response.length} reseña${response.length !== 1 ? 's' : ''}`;
+                
+                // Actualizar estrellas
+                const stars = starsElement.querySelectorAll('.gr-star');
+                for (let i = 0; i &lt; stars.length; i++) {
+                  if (i &lt; Math.round(averageRating)) {
+                    stars[i].textContent = '★';
+                    stars[i].classList.add('gr-star-filled');
+                  }
+                }
+                
+                // Crear HTML para cada reseña
+                let reviewsHTML = '';
+                
+                response.forEach(review => {
+                  reviewsHTML += `
+                    <div class="gr-review-card">
+                      <div class="gr-review-header">
+                        <div class="gr-review-author">${review.nombre_cliente}</div>
+                        <div class="gr-review-rating">
+                          ${Array(5).fill().map((_, i) => 
+                            i &lt; review.valoracion 
+                              ? '<span class="gr-star gr-star-filled">★</span>' 
+                              : '<span class="gr-star">☆</span>'
+                          ).join('')}
+                        </div>
+                      </div>
+                      
+                      ${review.comentario ? `<div class="gr-review-content">${review.comentario}</div>` : ''}
+                      
+                      <div class="gr-review-date">
+                        ${new Date(review.fecha_creacion).toLocaleDateString()}
+                      </div>
+                    </div>
+                  `;
+                });
+                
+                reviewsList.innerHTML = reviewsHTML;
+                reviewsList.style.display = 'block';
+              });
+            
+            // Manejar envío del formulario
+            if (reviewForm) {
+              reviewForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(reviewForm);
+                const reviewData = {
+                  nombre_cliente: formData.get('nombre_cliente'),
+                  id_producto: formData.get('id_producto'),
+                  valoracion: parseInt(formData.get('valoracion')),
+                  comentario: formData.get('comentario')
+                };
+                
+                window.granitoAPI.createProductReview(reviewData)
+                  .then(response => {
+                    if (response.error) {
+                      alert('Error al enviar la reseña. Por favor, inténtalo de nuevo.');
+                      return;
+                    }
+                    
+                    alert('¡Gracias por tu reseña!');
+                    reviewForm.reset();
+                    
+                    // Recargar la página para mostrar la nueva reseña
+                    window.location.reload();
+                  });
+              });
+            }
+          }
+        });
+      </script>
+
+      <style>
+        .gr-reviews-section {
+          margin: 40px 0;
+        }
+        
+        .gr-section-title {
+          text-align: center;
+          margin-bottom: 30px;
+        }
+        
+        .gr-reviews-loading {
+          text-align: center;
+          padding: 20px;
+        }
+        
+        .gr-reviews-summary {
+          margin-bottom: 30px;
+        }
+        
+        .gr-reviews-stats {
+          display: flex;
+          justify-content: center;
+        }
+        
+        .gr-reviews-average {
+          text-align: center;
+        }
+        
+        .gr-average-rating {
+          font-size: 2em;
+          font-weight: bold;
+        }
+        
+        .gr-average-stars {
+          margin: 5px 0;
+          font-size: 1.5em;
+        }
+        
+        .gr-star {
+          color: #ccc;
+        }
+        
+        .gr-star-filled {
+          color: {{ settings.gr_color_principal }};
+        }
+        
+        .gr-reviews-count {
+          color: #777;
+        }
+        
+        .gr-review-form-container {
+          margin-bottom: 30px;
+          padding: 20px;
+          border: 1px solid #e5e5e5;
+          border-radius: 8px;
+        }
+        
+        .gr-form-field {
+          margin-bottom: 15px;
+        }
+        
+        .gr-form-field label {
+          display: block;
+          margin-bottom: 5px;
+        }
+        
+        .gr-form-field input[type="text"],
+        .gr-form-field textarea {
+          width: 100%;
+          padding: 8px;
+          border: 1px solid #e5e5e5;
+          border-radius: 4px;
+        }
+        
+        .gr-rating-input {
+          display: flex;
+          flex-direction: row-reverse;
+          justify-content: flex-end;
+        }
+        
+        .gr-rating-input input {
+          display: none;
+        }
+        
+        .gr-rating-input label {
+          font-size: 1.5em;
+          color: #ccc;
+          cursor: pointer;
+          margin-right: 5px;
+        }
+        
+        .gr-rating-input label:hover,
+        .gr-rating-input label:hover ~ label,
+        .gr-rating-input input:checked ~ label {
+          color: {{ settings.gr_color_principal }};
+        }
+        
+        .gr-submit-button {
+          background-color: {{ settings.gr_color_principal }};
+          color: white;
+          border: none;
+          padding: 10px 15px;
+          border-radius: 4px;
+          cursor: pointer;
+          transition: background-color 0.2s ease;
+        }
+        
+        .gr-submit-button:hover {
+          background-color: {{ settings.gr_color_secundario }};
+        }
+        
+        .gr-review-card {
+          border: 1px solid #e5e5e5;
+          border-radius: 8px;
+          padding: 15px;
+          margin-bottom: 15px;
+        }
+        
+        .gr-review-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 10px;
+        }
+        
+        .gr-review-author {
+          font-weight: bold;
+        }
+        
+        .gr-review-content {
+          margin-bottom: 10px;
+        }
+        
+        .gr-review-date {
+          font-size: 0.8em;
+          color: #777;
+          text-align: right;
+        }
+      </style>
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Product Reviews",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title",
+      "default": "Customer Reviews"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_form",
+      "label": "Mostrar formulario de reseñas",
+      "default": true
+    }
+  ],
+  "presets": [
+    {
+      "name": "Product Reviews",
+      "category": "GranitoSkate"
+    },
+    {
+      "name": "GR Reseñas de Producto"
+    }
+  ]
+}
+{% endschema %}

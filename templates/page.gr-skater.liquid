@@ -1,0 +1,470 @@
+{% layout 'theme' %}
+
+<div class="gr-skater-detail-page" id="gr-skater-detail-container">
+  <div class="page-width">
+    <div class="gr-skater-loading">Cargando información del skater...</div>
+    
+    <div class="gr-skater-detail" style="display: none;">
+      &lt;!-- La información del skater se cargará aquí dinámicamente -->
+    </div>
+    
+    <div class="gr-skater-videos" style="display: none;">
+      <h2>Videos</h2>
+      <div class="gr-videos-grid">
+        &lt;!-- Los videos se cargarán aquí dinámicamente -->
+      </div>
+    </div>
+    
+    <div class="gr-skater-sponsors" style="display: none;">
+      <h2>Patrocinadores</h2>
+      <div class="gr-sponsors-grid">
+        &lt;!-- Los patrocinadores se cargarán aquí dinámicamente -->
+      </div>
+    </div>
+    
+    <div class="gr-skater-products" style="display: none;">
+      <h2>Productos relacionados</h2>
+      <div class="gr-products-grid">
+        &lt;!-- Los productos se cargarán aquí dinámicamente -->
+      </div>
+    </div>
+    
+    <div class="gr-back-link">
+      <a href="/pages/skaters" class="gr-button">Volver al catálogo</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Obtener el ID del skater de la URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const skaterId = urlParams.get('id');
+    
+    if (!skaterId) {
+      window.location.href = '/pages/skaters';
+      return;
+    }
+    
+    const detailContainer = document.getElementById('gr-skater-detail-container');
+    const loadingElement = detailContainer.querySelector('.gr-skater-loading');
+    const detailElement = detailContainer.querySelector('.gr-skater-detail');
+    const videosElement = detailContainer.querySelector('.gr-skater-videos');
+    const sponsorsElement = detailContainer.querySelector('.gr-skater-sponsors');
+    const productsElement = detailContainer.querySelector('.gr-skater-products');
+    
+    if (window.granitoAPI) {
+      // Cargar información del skater desde la API
+      window.granitoAPI.getSkaterDetail(skaterId)
+        .then(response => {
+          loadingElement.style.display = 'none';
+          
+          if (response.error) {
+            detailElement.innerHTML = '<p>Error al cargar la información del skater.</p>';
+            detailElement.style.display = 'block';
+            return;
+          }
+          
+          // Crear HTML para la información del skater
+          const skater = response;
+          
+          let detailHTML = `
+            <div class="gr-skater-header">
+              <div class="gr-skater-header-image">
+                <img src="${skater.imagen_url || '/placeholder.svg?height=500&width=500'}" alt="${skater.nombre}" loading="lazy">
+              </div>
+              <div class="gr-skater-header-info">
+                <h1 class="gr-skater-name">${skater.nombre}</h1>
+                ${skater.estilo ? `<p class="gr-skater-style"><strong>Estilo:</strong> ${skater.estilo}</p>` : ''}
+                ${skater.edad ? `<p class="gr-skater-age"><strong>Edad:</strong> ${skater.edad} años</p>` : ''}
+                ${skater.ciudad ? `<p class="gr-skater-city"><strong>Ciudad:</strong> ${skater.ciudad}</p>` : ''}
+                ${skater.pais ? `<p class="gr-skater-country"><strong>País:</strong> ${skater.pais}</p>` : ''}
+              </div>
+            </div>
+            
+            ${skater.biografia ? `
+              <div class="gr-skater-bio">
+                <h2>Biografía</h2>
+                <div class="gr-skater-bio-content">${skater.biografia}</div>
+              </div>
+            ` : ''}
+            
+            ${skater.logros ? `
+              <div class="gr-skater-achievements">
+                <h2>Logros</h2>
+                <div class="gr-skater-achievements-content">${skater.logros}</div>
+              </div>
+            ` : ''}
+          `;
+          
+          detailElement.innerHTML = detailHTML;
+          detailElement.style.display = 'block';
+          
+          // Cargar videos si existen
+          if (skater.videos && skater.videos.length > 0) {
+            let videosHTML = '';
+            
+            skater.videos.forEach(video => {
+              videosHTML += `
+                <div class="gr-video-item">
+                  <div class="gr-video-container">
+                    <iframe src="${video.url}" frameborder="0" allowfullscreen></iframe>
+                  </div>
+                  ${video.titulo ? `<p class="gr-video-title">${video.titulo}</p>` : ''}
+                </div>
+              `;
+            });
+            
+            videosElement.querySelector('.gr-videos-grid').innerHTML = videosHTML;
+            videosElement.style.display = 'block';
+          }
+          
+          // Cargar patrocinadores si existen
+          if (skater.patrocinadores && skater.patrocinadores.length > 0) {
+            let sponsorsHTML = '';
+            
+            skater.patrocinadores.forEach(sponsor => {
+              sponsorsHTML += `
+                <div class="gr-sponsor-item">
+                  ${sponsor.logo_url ? `
+                    <div class="gr-sponsor-logo">
+                      <img src="${sponsor.logo_url}" alt="${sponsor.nombre}" loading="lazy">
+                    </div>
+                  ` : ''}
+                  <p class="gr-sponsor-name">${sponsor.nombre}</p>
+                </div>
+              `;
+            });
+            
+            sponsorsElement.querySelector('.gr-sponsors-grid').innerHTML = sponsorsHTML;
+            sponsorsElement.style.display = 'block';
+          }
+          
+          // Cargar productos relacionados si existen
+          if (skater.productos && skater.productos.length > 0) {
+            let productsHTML = '';
+            
+            skater.productos.forEach(product => {
+              productsHTML += `
+                <div class="gr-product-item">
+                  <a href="/products/${product.handle}" class="gr-product-link">
+                    <div class="gr-product-image">
+                      <img src="${product.imagen_url || '/placeholder.svg?height=300&width=300'}" alt="${product.nombre}" loading="lazy">
+                    </div>
+                    <div class="gr-product-info">
+                      <h3 class="gr-product-name">${product.nombre}</h3>
+                      <p class="gr-product-price">${product.precio}</p>
+                    </div>
+                  </a>
+                </div>
+              `;
+            });
+            
+            productsElement.querySelector('.gr-products-grid').innerHTML = productsHTML;
+            productsElement.style.display = 'block';
+          }
+        })
+        .catch(error => {
+          console.error('Error al cargar información del skater:', error);
+          loadingElement.textContent = 'Error al cargar la información del skater.';
+        });
+    } else {
+      // Si la API no está disponible, mostrar datos estáticos de ejemplo
+      loadingElement.style.display = 'none';
+      
+      // Datos de ejemplo
+      const exampleSkater = {
+        nombre: "Tony Hawk",
+        estilo: "Vert",
+        edad: 54,
+        ciudad: "San Diego",
+        pais: "Estados Unidos",
+        imagen_url: "/placeholder.svg?height=500&width=500",
+        biografia: "Tony Hawk es uno de los skaters más reconocidos del mundo. Ha sido pionero en muchos trucos, incluyendo el legendario 900.",
+        logros: "<ul><li>Primer skater en completar un 900</li><li>12 veces campeón mundial</li><li>Creador de la serie de videojuegos Tony Hawk's Pro Skater</li></ul>"
+      };
+      
+      let detailHTML = `
+        <div class="gr-skater-header">
+          <div class="gr-skater-header-image">
+            <img src="${exampleSkater.imagen_url}" alt="${exampleSkater.nombre}" loading="lazy">
+          </div>
+          <div class="gr-skater-header-info">
+            <h1 class="gr-skater-name">${exampleSkater.nombre}</h1>
+            <p class="gr-skater-style"><strong>Estilo:</strong> ${exampleSkater.estilo}</p>
+            <p class="gr-skater-age"><strong>Edad:</strong> ${exampleSkater.edad} años</p>
+            <p class="gr-skater-city"><strong>Ciudad:</strong> ${exampleSkater.ciudad}</p>
+            <p class="gr-skater-country"><strong>País:</strong> ${exampleSkater.pais}</p>
+          </div>
+        </div>
+        
+        <div class="gr-skater-bio">
+          <h2>Biografía</h2>
+          <div class="gr-skater-bio-content">${exampleSkater.biografia}</div>
+        </div>
+        
+        <div class="gr-skater-achievements">
+          <h2>Logros</h2>
+          <div class="gr-skater-achievements-content">${exampleSkater.logros}</div>
+        </div>
+      `;
+      
+      detailElement.innerHTML = detailHTML;
+      detailElement.style.display = 'block';
+      
+      // Ejemplo de videos
+      let videosHTML = `
+        <div class="gr-video-item">
+          <div class="gr-video-container">
+            <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameborder="0" allowfullscreen></iframe>
+          </div>
+          <p class="gr-video-title">Tony Hawk's 900</p>
+        </div>
+      `;
+      
+      videosElement.querySelector('.gr-videos-grid').innerHTML = videosHTML;
+      videosElement.style.display = 'block';
+      
+      // Ejemplo de patrocinadores
+      let sponsorsHTML = `
+        <div class="gr-sponsor-item">
+          <div class="gr-sponsor-logo">
+            <img src="/placeholder.svg?height=100&width=200" alt="Birdhouse" loading="lazy">
+          </div>
+          <p class="gr-sponsor-name">Birdhouse</p>
+        </div>
+        <div class="gr-sponsor-item">
+          <div class="gr-sponsor-logo">
+            <img src="/placeholder.svg?height=100&width=200" alt="Independent" loading="lazy">
+          </div>
+          <p class="gr-sponsor-name">Independent</p>
+        </div>
+      `;
+      
+      sponsorsElement.querySelector('.gr-sponsors-grid').innerHTML = sponsorsHTML;
+      sponsorsElement.style.display = 'block';
+      
+      // Ejemplo de productos
+      let productsHTML = `
+        <div class="gr-product-item">
+          <a href="#" class="gr-product-link">
+            <div class="gr-product-image">
+              <img src="/placeholder.svg?height=300&width=300" alt="Tabla Birdhouse" loading="lazy">
+            </div>
+            <div class="gr-product-info">
+              <h3 class="gr-product-name">Tabla Birdhouse Pro</h3>
+              <p class="gr-product-price">79,99€</p>
+            </div>
+          </a>
+        </div>
+      `;
+      
+      productsElement.querySelector('.gr-products-grid').innerHTML = productsHTML;
+      productsElement.style.display = 'block';
+    }
+  });
+</script>
+
+<style>
+  .gr-skater-detail-page {
+    margin: 40px 0;
+  }
+  
+  .gr-skater-loading {
+    text-align: center;
+    padding: 20px;
+  }
+  
+  .gr-skater-header {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-bottom: 30px;
+  }
+  
+  @media screen and (min-width: 750px) {
+    .gr-skater-header {
+      flex-direction: row;
+      align-items: flex-start;
+    }
+    
+    .gr-skater-header-image {
+      flex: 0 0 40%;
+    }
+    
+    .gr-skater-header-info {
+      flex: 1;
+      padding-left: 20px;
+    }
+  }
+  
+  .gr-skater-header-image {
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  
+  .gr-skater-header-image img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  
+  .gr-skater-name {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: {{ settings.gr_color_principal }};
+  }
+  
+  .gr-skater-bio,
+  .gr-skater-achievements {
+    margin-bottom: 30px;
+  }
+  
+  .gr-skater-bio h2,
+  .gr-skater-achievements h2,
+  .gr-skater-videos h2,
+  .gr-skater-sponsors h2,
+  .gr-skater-products h2 {
+    color: {{ settings.gr_color_principal }};
+    margin-bottom: 15px;
+  }
+  
+  .gr-videos-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+    margin-bottom: 30px;
+  }
+  
+  @media screen and (min-width: 750px) {
+    .gr-videos-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  .gr-video-container {
+    position: relative;
+    padding-bottom: 56.25%; /* 16:9 aspect ratio */
+    height: 0;
+    overflow: hidden;
+    border-radius: 8px;
+  }
+  
+  .gr-video-container iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+  
+  .gr-video-title {
+    margin-top: 10px;
+    text-align: center;
+  }
+  
+  .gr-sponsors-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    margin-bottom: 30px;
+  }
+  
+  @media screen and (min-width: 750px) {
+    .gr-sponsors-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+  
+  .gr-sponsor-item {
+    text-align: center;
+  }
+  
+  .gr-sponsor-logo {
+    margin-bottom: 10px;
+  }
+  
+  .gr-sponsor-logo img {
+    max-width: 100%;
+    height: auto;
+  }
+  
+  .gr-sponsor-name {
+    margin: 0;
+  }
+  
+  .gr-products-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    margin-bottom: 30px;
+  }
+  
+  @media screen and (min-width: 750px) {
+    .gr-products-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+  
+  .gr-product-item {
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  
+  .gr-product-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+  }
+  
+  .gr-product-image {
+    width: 100%;
+    padding-top: 100%;
+    position: relative;
+  }
+  
+  .gr-product-image img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .gr-product-info {
+    padding: 10px;
+    text-align: center;
+  }
+  
+  .gr-product-name {
+    margin: 0 0 5px;
+    font-size: 1em;
+  }
+  
+  .gr-product-price {
+    margin: 0;
+    font-weight: bold;
+    color: {{ settings.gr_color_principal }};
+  }
+  
+  .gr-back-link {
+    margin-top: 30px;
+    text-align: center;
+  }
+  
+  .gr-button {
+    display: inline-block;
+    background-color: {{ settings.gr_color_principal }};
+    color: white;
+    padding: 10px 20px;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: background-color 0.2s ease;
+  }
+  
+  .gr-button:hover {
+    background-color: {{ settings.gr_color_secundario }};
+  }
+</style>

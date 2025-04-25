@@ -1,0 +1,80 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "main": {
+      "type": "main-page",
+      "settings": {
+        "padding_top": 28,
+        "padding_bottom": 28
+      }
+    },
+    "gr_spots_directory_6gmMjr": {
+      "type": "gr-spots-directory",
+      "blocks": {
+        "spot_J4D7bB": {
+          "type": "spot",
+          "settings": {
+            "nombre": "Nombre del Spot",
+            "tipo": "street",
+            "ciudad": "Madrid"
+          }
+        },
+        "spot_DAk449": {
+          "type": "spot",
+          "settings": {
+            "nombre": "Nombre del Spot",
+            "tipo": "street",
+            "ciudad": "Madrid"
+          }
+        },
+        "spot_ztNfYX": {
+          "type": "spot",
+          "settings": {
+            "nombre": "Nombre del Spot",
+            "tipo": "street",
+            "ciudad": "Madrid"
+          }
+        }
+      },
+      "block_order": [
+        "spot_J4D7bB",
+        "spot_DAk449",
+        "spot_ztNfYX"
+      ],
+      "name": "GR Catálogo de Spots",
+      "settings": {
+        "title": "Spots de Skate",
+        "description": "Descubre los mejores spots para patinar",
+        "show_filter": true,
+        "columns_desktop": 3
+      }
+    },
+    "gr_spots_catalog_7xzcjy": {
+      "type": "gr-spots-catalog",
+      "name": "Spots Catalog",
+      "settings": {
+        "title": "Skate Spots",
+        "description": "",
+        "spots_per_page": 6,
+        "enable_filtering": true,
+        "enable_sorting": true,
+        "background_color": "#ffffff",
+        "title_color": "#333333",
+        "link_color": "#c5a14d"
+      }
+    }
+  },
+  "order": [
+    "main",
+    "gr_spots_directory_6gmMjr",
+    "gr_spots_catalog_7xzcjy"
+  ]
+}

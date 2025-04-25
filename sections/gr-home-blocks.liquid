@@ -1,0 +1,216 @@
+{% comment %}
+  Sección de bloques de inicio dinámicos
+{% endcomment %}
+
+<div class="gr-home-blocks-section" id="gr-home-blocks-container">
+  <div class="page-width">
+    {% if section.settings.title != blank %}
+      <h2 class="gr-section-title">{{ section.settings.title }}</h2>
+    {% endif %}
+    
+    <div class="gr-home-blocks-loading">Cargando contenido...</div>
+    
+    <div class="gr-home-blocks-grid" style="display: none;">
+      <!-- Los bloques se cargarán aquí dinámicamente -->
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    if (window.granitoAPI) {
+      const homeBlocksContainer = document.getElementById('gr-home-blocks-container');
+      const loadingElement = homeBlocksContainer.querySelector('.gr-home-blocks-loading');
+      const blocksGrid = homeBlocksContainer.querySelector('.gr-home-blocks-grid');
+      
+      window.granitoAPI.getHomeBlocks()
+        .then(response => {
+          loadingElement.style.display = 'none';
+          
+          if (response.error) {
+            blocksGrid.innerHTML = '<p>Error al cargar el contenido.</p>';
+            blocksGrid.style.display = 'block';
+            return;
+          }
+          
+          if (response.length === 0) {
+            blocksGrid.innerHTML = '<p>No hay contenido disponible.</p>';
+            blocksGrid.style.display = 'block';
+            return;
+          }
+          
+          // Ordenar bloques por el campo 'orden' si existe
+          const blocks = response.sort((a, b) => {
+            if (a.orden !== undefined && b.orden !== undefined) {
+              return a.orden - b.orden;
+            }
+            return 0;
+          });
+          
+          // Crear HTML para cada bloque
+          let blocksHTML = '';
+          
+          blocks.forEach(block => {
+            let blockHTML = '';
+            
+            switch (block.tipo) {
+              case 'texto':
+                blockHTML = `
+                  <div class="gr-home-block gr-home-block-text">
+                    <h3 class="gr-home-block-title">${block.titulo}</h3>
+                    ${block.descripcion ? `<div class="gr-home-block-description">${block.descripcion}</div>` : ''}
+                    ${block.contenido ? `<div class="gr-home-block-content">${block.contenido}</div>` : ''}
+                  </div>
+                `;
+                break;
+              
+              case 'imagen':
+                blockHTML = `
+                  <div class="gr-home-block gr-home-block-image">
+                    <h3 class="gr-home-block-title">${block.titulo}</h3>
+                    ${block.descripcion ? `<div class="gr-home-block-description">${block.descripcion}</div>` : ''}
+                    ${block.contenido ? `<img src="${block.contenido}" alt="${block.titulo}" class="gr-home-block-img">` : ''}
+                  </div>
+                `;
+                break;
+              
+              case 'video':
+                blockHTML = `
+                  <div class="gr-home-block gr-home-block-video">
+                    <h3 class="gr-home-block-title">${block.titulo}</h3>
+                    ${block.descripcion ? `<div class="gr-home-block-description">${block.descripcion}</div>` : ''}
+                    ${block.contenido ? `
+                      <div class="gr-home-block-video-container">
+                        <iframe src="${block.contenido}" frameborder="0" allowfullscreen></iframe>
+                      </div>
+                    ` : ''}
+                  </div>
+                `;
+                break;
+              
+              case 'productos':
+                blockHTML = `
+                  <div class="gr-home-block gr-home-block-products">
+                    <h3 class="gr-home-block-title">${block.titulo}</h3>
+                    ${block.descripcion ? `<div class="gr-home-block-description">${block.descripcion}</div>` : ''}
+                    <div class="gr-home-block-products-grid">
+                      ${block.contenido ? block.contenido : 'No hay productos disponibles.'}
+                    </div>
+                  </div>
+                `;
+                break;
+              
+              default:
+                blockHTML = `
+                  <div class="gr-home-block">
+                    <h3 class="gr-home-block-title">${block.titulo}</h3>
+                    ${block.descripcion ? `<div class="gr-home-block-description">${block.descripcion}</div>` : ''}
+                    ${block.contenido ? `<div class="gr-home-block-content">${block.contenido}</div>` : ''}
+                  </div>
+                `;
+            }
+            
+            blocksHTML += blockHTML;
+          });
+          
+          blocksGrid.innerHTML = blocksHTML;
+          blocksGrid.style.display = 'block';
+        });
+    }
+  });
+</script>
+
+<style>
+  .gr-home-blocks-section {
+    margin: 40px 0;
+  }
+  
+  .gr-section-title {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  
+  .gr-home-blocks-loading {
+    text-align: center;
+    padding: 20px;
+  }
+  
+  .gr-home-blocks-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+  
+  @media screen and (min-width: 750px) {
+    .gr-home-blocks-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  .gr-home-block {
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    padding: 20px;
+    height: 100%;
+  }
+  
+  .gr-home-block-title {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: {{ settings.gr_color_principal }};
+  }
+  
+  .gr-home-block-description {
+    margin-bottom: 15px;
+  }
+  
+  .gr-home-block-img {
+    width: 100%;
+    height: auto;
+    border-radius: 4px;
+  }
+  
+  .gr-home-block-video-container {
+    position: relative;
+    padding-bottom: 56.25%; /* 16:9 aspect ratio */
+    height: 0;
+    overflow: hidden;
+    margin-top: 15px;
+  }
+  
+  .gr-home-block-video-container iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+  
+  .gr-home-block-products-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin-top: 15px;
+  }
+</style>
+
+{% schema %}
+{
+  "name": "GR Bloques de Inicio",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Título de la sección",
+      "default": "Contenido destacado"
+    }
+  ],
+  "presets": [
+    {
+      "name": "GR Bloques de Inicio"
+    }
+  ]
+}
+{% endschema %}

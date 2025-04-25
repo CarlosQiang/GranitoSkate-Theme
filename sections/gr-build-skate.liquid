@@ -1,0 +1,490 @@
+{% comment %}
+  Sección de constructor de skate
+{% endcomment %}
+
+<div class="gr-build-skate-section py-12">
+  <div class="page-width">
+    {% if section.settings.title != blank %}
+      <h2 class="gr-section-title text-3xl font-bold text-center mb-4">{{ section.settings.title }}</h2>
+    {% endif %}
+    
+    {% if section.settings.description != blank %}
+      <div class="gr-section-description text-center text-gray-600 mb-8">{{ section.settings.description }}</div>
+    {% endif %}
+    
+    <div class="gr-build-skate-loading text-center text-gray-500">Cargando constructor de skate...</div>
+    
+    <div class="gr-build-skate-content hidden flex-col md:flex-row gap-8">
+      <div class="gr-build-skate-form p-6 border border-gray-200 rounded-lg shadow-md">
+        <h3 class="text-xl font-semibold mb-4">Crea tu skate personalizado</h3>
+        
+        <form id="gr-build-skate-form" class="space-y-4">
+          <div class="gr-form-field">
+            <label for="gr-build-name" class="block text-sm font-medium text-gray-700">Nombre de tu build</label>
+            <input type="text" id="gr-build-name" name="nombre_build" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+          </div>
+          
+          <div class="gr-form-field">
+            <label for="gr-build-tabla" class="block text-sm font-medium text-gray-700">Tabla</label>
+            <select id="gr-build-tabla" name="tabla_id" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+              <option value="">Selecciona una tabla</option>
+              <!-- Las opciones se cargarán dinámicamente -->
+            </select>
+          </div>
+          
+          <div class="gr-form-field">
+            <label for="gr-build-ruedas" class="block text-sm font-medium text-gray-700">Ruedas</label>
+            <select id="gr-build-ruedas" name="ruedas_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+              <option value="">Selecciona ruedas</option>
+              <!-- Las opciones se cargarán dinámicamente -->
+            </select>
+          </div>
+          
+          <div class="gr-form-field">
+            <label for="gr-build-ejes" class="block text-sm font-medium text-gray-700">Ejes</label>
+            <select id="gr-build-ejes" name="ejes_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+              <option value="">Selecciona ejes</option>
+              <!-- Las opciones se cargarán dinámicamente -->
+            </select>
+          </div>
+          
+          <div class="gr-form-field">
+            <label for="gr-build-grip" class="block text-sm font-medium text-gray-700">Grip</label>
+            <select id="gr-build-grip" name="grip_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+              <option value="">Selecciona grip</option>
+              <!-- Las opciones se cargarán dinámicamente -->
+            </select>
+          </div>
+          
+          <div class="gr-form-field">
+            <label for="gr-build-otros" class="block text-sm font-medium text-gray-700">Otros componentes</label>
+            <textarea id="gr-build-otros" name="otros_componentes" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"></textarea>
+          </div>
+          
+          <button type="submit" class="gr-submit-button bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50">Guardar Build</button>
+        </form>
+      </div>
+      
+      <div class="gr-build-skate-preview p-6 border border-gray-200 rounded-lg shadow-md">
+        <h3 class="text-xl font-semibold mb-4">Vista previa</h3>
+        <div class="gr-build-preview-image">
+          <img src="/placeholder.svg?height=400&width=400" alt="Vista previa del skate" id="gr-build-preview-img" class="rounded-lg">
+        </div>
+      </div>
+    </div>
+    
+    <div class="gr-build-skate-saved hidden mt-8">
+      <h3 class="text-xl font-semibold mb-4">Mis builds guardados</h3>
+      <div class="gr-builds-list">
+        <!-- Los builds guardados se cargarán aquí dinámicamente -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    if (window.granitoAPI) {
+      const buildSkateContainer = document.getElementById('gr-build-skate-container');
+      const loadingElement = buildSkateContainer.querySelector('.gr-build-skate-loading');
+      const contentElement = buildSkateContainer.querySelector('.gr-build-skate-content');
+      const savedElement = buildSkateContainer.querySelector('.gr-build-skate-saved');
+      const buildForm = document.getElementById('gr-build-skate-form');
+      
+      // Función para cargar los productos de cada categoría
+      const loadProducts = async () => {
+        try {
+          // Aquí normalmente harías una llamada a la API para obtener los productos
+          // Como ejemplo, usaremos datos estáticos
+          const tablas = [
+            { id: '1', nombre: 'Tabla Granito Pro 8.0"' },
+            { id: '2', nombre: 'Tabla Granito Street 7.75"' },
+            { id: '3', nombre: 'Tabla Granito Park 8.25"' }
+          ];
+          
+          const ruedas = [
+            { id: '1', nombre: 'Ruedas Granito 52mm' },
+            { id: '2', nombre: 'Ruedas Granito 54mm' },
+            { id: '3', nombre: 'Ruedas Granito 56mm' }
+          ];
+          
+          const ejes = [
+            { id: '1', nombre: 'Ejes Granito Standard' },
+            { id: '2', nombre: 'Ejes Granito Pro' },
+            { id: '3', nombre: 'Ejes Granito Hollow' }
+          ];
+          
+          const grips = [
+            { id: '1', nombre: 'Grip Granito Negro' },
+            { id: '2', nombre: 'Grip Granito Transparente' },
+            { id: '3', nombre: 'Grip Granito Antideslizante' }
+          ];
+          
+          // Llenar los selectores
+          const tablaSelect = document.getElementById('gr-build-tabla');
+          const ruedasSelect = document.getElementById('gr-build-ruedas');
+          const ejesSelect = document.getElementById('gr-build-ejes');
+          const gripSelect = document.getElementById('gr-build-grip');
+          
+          tablas.forEach(tabla => {
+            const option = document.createElement('option');
+            option.value = tabla.id;
+            option.textContent = tabla.nombre;
+            tablaSelect.appendChild(option);
+          });
+          
+          ruedas.forEach(rueda => {
+            const option = document.createElement('option');
+            option.value = rueda.id;
+            option.textContent = rueda.nombre;
+            ruedasSelect.appendChild(option);
+          });
+          
+          ejes.forEach(eje => {
+            const option = document.createElement('option');
+            option.value = eje.id;
+            option.textContent = eje.nombre;
+            ejesSelect.appendChild(option);
+          });
+          
+          grips.forEach(grip => {
+            const option = document.createElement('option');
+            option.value = grip.id;
+            option.textContent = grip.nombre;
+            gripSelect.appendChild(option);
+          });
+          
+          // Mostrar el contenido
+          loadingElement.style.display = 'none';
+          contentElement.style.display = 'flex';
+          
+          // Cargar builds guardados
+          loadSavedBuilds();
+        } catch (error) {
+          console.error('Error al cargar productos:', error);
+          loadingElement.textContent = 'Error al cargar el constructor de skate.';
+        }
+      };
+      
+      // Función para cargar builds guardados
+      const loadSavedBuilds = async () => {
+        try {
+          const response = await window.granitoAPI.getSkateBuilds();
+          
+          if (response.error) {
+            // Si hay un error de autenticación, no mostrar la sección
+            if (!response.error.includes('autenticado')) {
+              savedElement.innerHTML = `<p>Error al cargar tus builds guardados.</p>`;
+              savedElement.style.display = 'block';
+            }
+            return;
+          }
+          
+          if (response.length === 0) {
+            savedElement.innerHTML = `<h3>Mis builds guardados</h3><p>No tienes builds guardados.</p>`;
+            savedElement.style.display = 'block';
+            return;
+          }
+          
+          // Crear HTML para cada build guardado
+          let buildsHTML = '<h3>Mis builds guardados</h3><div class="gr-builds-list">';
+          
+          response.forEach(build => {
+            buildsHTML += `
+              <div class="gr-build-item" data-build-id="${build.id}">
+                <h4 class="gr-build-item-title">${build.nombre_build}</h4>
+                <div class="gr-build-item-details">
+                  <p><strong>Tabla:</strong> ${build.tabla_nombre || 'No seleccionada'}</p>
+                  ${build.ruedas_nombre ? `<p><strong>Ruedas:</strong> ${build.ruedas_nombre}</p>` : ''}
+                  ${build.ejes_nombre ? `<p><strong>Ejes:</strong> ${build.ejes_nombre}</p>` : ''}
+                  ${build.grip_nombre ? `<p><strong>Grip:</strong> ${build.grip_nombre}</p>` : ''}
+                </div>
+                <div class="gr-build-item-actions">
+                  <button class="gr-build-edit-button" data-build-id="${build.id}">Editar</button>
+                  <button class="gr-build-delete-button" data-build-id="${build.id}">Eliminar</button>
+                </div>
+              </div>
+            `;
+          });
+          
+          buildsHTML += '</div>';
+          
+          savedElement.innerHTML = buildsHTML;
+          savedElement.style.display = 'block';
+          
+          // Añadir event listeners para los botones de editar y eliminar
+          const editButtons = savedElement.querySelectorAll('.gr-build-edit-button');
+          const deleteButtons = savedElement.querySelectorAll('.gr-build-delete-button');
+          
+          editButtons.forEach(button => {
+            button.addEventListener('click', function() {
+              const buildId = this.dataset.buildId;
+              // Aquí cargarías los datos del build para editar
+              alert('Función de editar en desarrollo');
+            });
+          });
+          
+          deleteButtons.forEach(button => {
+            button.addEventListener('click', function() {
+              const buildId = this.dataset.buildId;
+              
+              if (confirm('¿Estás seguro de que quieres eliminar este build?')) {
+                window.granitoAPI.deleteSkateBuild(buildId)
+                  .then(response => {
+                    if (!response.error) {
+                      const item = this.closest('.gr-build-item');
+                      item.remove();
+                      
+                      // Si no quedan elementos, actualizar mensaje
+                      if (savedElement.querySelectorAll('.gr-build-item').length === 0) {
+                        savedElement.innerHTML = `<h3>Mis builds guardados</h3><p>No tienes builds guardados.</p>`;
+                      }
+                    }
+                  });
+              }
+            });
+          });
+        } catch (error) {
+          console.error('Error al cargar builds guardados:', error);
+        }
+      };
+      
+      // Manejar envío del formulario
+      if (buildForm) {
+        buildForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          
+          const formData = new FormData(buildForm);
+          const buildData = {
+            nombre_build: formData.get('nombre_build'),
+            tabla_id: formData.get('tabla_id'),
+            ruedas_id: formData.get('ruedas_id') || null,
+            ejes_id: formData.get('ejes_id') || null,
+            grip_id: formData.get('grip_id') || null,
+            otros_componentes: formData.get('otros_componentes') || null
+          };
+          
+          window.granitoAPI.createSkateBuild(buildData)
+            .then(response => {
+              if (response.error) {
+                if (response.error.includes('autenticado')) {
+                  alert('Debes iniciar sesión para guardar tu build.');
+                } else {
+                  alert('Error al guardar el build. Por favor, inténtalo de nuevo.');
+                }
+                return;
+              }
+              
+              alert('¡Build guardado correctamente!');
+              buildForm.reset();
+              
+              // Recargar builds guardados
+              loadSavedBuilds();
+            });
+        });
+      }
+      
+      // Iniciar carga de productos
+      loadProducts();
+    }
+  });
+</script>
+
+<style>
+  .gr-build-skate-section {
+    margin: 40px 0;
+  }
+  
+  .gr-section-title {
+    text-align: center;
+    margin-bottom: 10px;
+  }
+  
+  .gr-section-description {
+    text-align: center;
+    margin-bottom: 30px;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .gr-build-skate-loading {
+    text-align: center;
+    padding: 20px;
+  }
+  
+  .gr-build-skate-content {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+  }
+  
+  @media screen and (min-width: 750px) {
+    .gr-build-skate-content {
+      flex-direction: row;
+    }
+    
+    .gr-build-skate-form,
+    .gr-build-skate-preview {
+      flex: 1;
+    }
+  }
+  
+  .gr-build-skate-form {
+    padding: 20px;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+  }
+  
+  .gr-form-field {
+    margin-bottom: 15px;
+  }
+  
+  .gr-form-field label {
+    display: block;
+    margin-bottom: 5px;
+  }
+  
+  .gr-form-field input,
+  .gr-form-field select,
+  .gr-form-field textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #e5e5e5;
+    border-radius: 4px;
+  }
+  
+  .gr-submit-button {
+    background-color: {{ settings.gr_color_principal }};
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  
+  .gr-submit-button:hover {
+    background-color: {{ settings.gr_color_secundario }};
+  }
+  
+  .gr-build-skate-preview {
+    padding: 20px;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    text-align: center;
+  }
+  
+  .gr-build-preview-image {
+    margin-top: 20px;
+  }
+  
+  .gr-build-preview-image img {
+    max-width: 100%;
+    height: auto;
+  }
+  
+  .gr-build-skate-saved {
+    margin-top: 40px;
+  }
+  
+  .gr-builds-list {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 20px;
+    margin-top: 20px;
+  }
+  
+  @media screen and (min-width: 750px) {
+    .gr-builds-list {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  @media screen and (min-width: 990px) {
+    .gr-builds-list {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  
+  .gr-build-item {
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    padding: 15px;
+  }
+  
+  .gr-build-item-title {
+    margin-top: 0;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #e5e5e5;
+    padding-bottom: 5px;
+  }
+  
+  .gr-build-item-details {
+    margin-bottom: 15px;
+  }
+  
+  .gr-build-item-details p {
+    margin: 5px 0;
+  }
+  
+  .gr-build-item-actions {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .gr-build-edit-button,
+  .gr-build-delete-button {
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .gr-build-edit-button {
+    background-color: {{ settings.gr_color_principal }};
+    color: white;
+    border: none;
+  }
+  
+  .gr-build-edit-button:hover {
+    background-color: {{ settings.gr_color_secundario }};
+  }
+  
+  .gr-build-delete-button {
+    background-color: transparent;
+    border: 1px solid #e5e5e5;
+  }
+  
+  .gr-build-delete-button:hover {
+    background-color: #f5f5f5;
+    border-color: #ccc;
+  }
+</style>
+
+{% schema %}
+{
+  "name": "GR Constructor de Skate",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Título de la sección",
+      "default": "Construye tu Skate"
+    },
+    {
+      "type": "textarea",
+      "id": "description",
+      "label": "Descripción",
+      "default": "Personaliza tu skate eligiendo los componentes que más te gusten."
+    }
+  ],
+  "presets": [
+    {
+      "name": "GR Constructor de Skate"
+    }
+  ]
+}
+{% endschema %}

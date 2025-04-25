@@ -1,0 +1,817 @@
+{% comment %}
+  Configurador de tablas de skate
+{% endcomment %}
+
+<div class="gr-skate-builder-section" id="gr-skate-builder-container">
+  <div class="page-width">
+    {% if section.settings.title != blank %}
+      <h2 class="gr-section-title">{{ section.settings.title }}</h2>
+    {% endif %}
+    
+    {% if section.settings.description != blank %}
+      <div class="gr-section-description">{{ section.settings.description }}</div>
+    {% endif %}
+    
+    <div class="gr-builder-loading">Cargando configurador...</div>
+    
+    <div class="gr-builder-content" style="display: none;">
+      <div class="gr-builder-steps">
+        <div class="gr-builder-step active" data-step="tabla">
+          <div class="gr-step-number">1</div>
+          <div class="gr-step-label">Tabla</div>
+        </div>
+        <div class="gr-builder-step" data-step="ruedas">
+          <div class="gr-step-number">2</div>
+          <div class="gr-step-label">Ruedas</div>
+        </div>
+        <div class="gr-builder-step" data-step="ejes">
+          <div class="gr-step-number">3</div>
+          <div class="gr-step-label">Ejes</div>
+        </div>
+        <div class="gr-builder-step" data-step="grip">
+          <div class="gr-step-number">4</div>
+          <div class="gr-step-label">Grip</div>
+        </div>
+        <div class="gr-builder-step" data-step="otros">
+          <div class="gr-step-number">5</div>
+          <div class="gr-step-label">Otros</div>
+        </div>
+      </div>
+      
+      <div class="gr-builder-main">
+        <div class="gr-builder-preview">
+          <div class="gr-preview-container">
+            <img src="{{ 'skateboard-base.png' | asset_url }}" alt="Base de skate" class="gr-preview-base">
+            <img src="/placeholder.svg" alt="Tabla" class="gr-preview-tabla" style="display: none;">
+            <img src="/placeholder.svg" alt="Ruedas" class="gr-preview-ruedas" style="display: none;">
+            <img src="/placeholder.svg" alt="Ejes" class="gr-preview-ejes" style="display: none;">
+            <img src="/placeholder.svg" alt="Grip" class="gr-preview-grip" style="display: none;">
+          </div>
+          
+          <div class="gr-preview-info">
+            <h3>Tu configuración</h3>
+            <ul class="gr-preview-list">
+              <li class="gr-preview-item gr-preview-tabla">Tabla: <span>No seleccionada</span></li>
+              <li class="gr-preview-item gr-preview-ruedas">Ruedas: <span>No seleccionadas</span></li>
+              <li class="gr-preview-item gr-preview-ejes">Ejes: <span>No seleccionados</span></li>
+              <li class="gr-preview-item gr-preview-grip">Grip: <span>No seleccionado</span></li>
+              <li class="gr-preview-item gr-preview-otros">Otros: <span>No seleccionados</span></li>
+            </ul>
+            
+            <div class="gr-preview-price">
+              <div class="gr-price-label">Precio total:</div>
+              <div class="gr-price-value">$0.00</div>
+            </div>
+            
+            <div class="gr-preview-actions">
+              <button class="gr-button gr-button-save" disabled>Guardar configuración</button>
+              <button class="gr-button gr-button-cart" disabled>Añadir al carrito</button>
+            </div>
+          </div>
+        
+          <div class="gr-builder-options">
+            <div class="gr-options-container gr-options-tabla active">
+              <h3>Selecciona una tabla</h3>
+              <div class="gr-options-grid">
+                &lt;!-- Las opciones de tablas se cargarán aquí dinámicamente -->
+              </div>
+            </div>
+          
+            <div class="gr-options-container gr-options-ruedas">
+              <h3>Selecciona ruedas</h3>
+              <div class="gr-options-grid">
+                &lt;!-- Las opciones de ruedas se cargarán aquí dinámicamente -->
+              </div>
+            </div>
+          
+            <div class="gr-options-container gr-options-ejes">
+              <h3>Selecciona ejes</h3>
+              <div class="gr-options-grid">
+                &lt;!-- Las opciones de ejes se cargarán aquí dinámicamente -->
+              </div>
+            </div>
+          
+            <div class="gr-options-container gr-options-grip">
+              <h3>Selecciona grip</h3>
+              <div class="gr-options-grid">
+                &lt;!-- Las opciones de grip se cargarán aquí dinámicamente -->
+              </div>
+            </div>
+          
+            <div class="gr-options-container gr-options-otros">
+              <h3>Selecciona otros componentes</h3>
+              <div class="gr-options-grid">
+                &lt;!-- Las opciones de otros componentes se cargarán aquí dinámicamente -->
+              </div>
+            </div>
+          
+            <div class="gr-builder-navigation">
+              <button class="gr-button gr-button-prev" disabled>Anterior</button>
+              <button class="gr-button gr-button-next">Siguiente</button>
+            </div>
+          </div>
+        </div>
+      
+        <div class="gr-builder-saved" style="display: none;">
+          <h3>Mis configuraciones guardadas</h3>
+          <div class="gr-saved-list">
+            &lt;!-- Las configuraciones guardadas se cargarán aquí dinámicamente -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gr-builder-modal" id="gr-save-modal" style="display: none;">
+      <div class="gr-modal-content">
+        <span class="gr-modal-close">&times;</span>
+        <h3>Guardar configuración</h3>
+        <div class="gr-modal-form">
+          <div class="gr-form-field">
+            <label for="gr-config-name">Nombre de la configuración</label>
+            <input type="text" id="gr-config-name" placeholder="Mi skate personalizado">
+          </div>
+          <button class="gr-button gr-button-save-confirm">Guardar</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        if (window.granitoAPI) {
+          const builderContainer = document.getElementById('gr-skate-builder-container');
+          const loadingElement = builderContainer.querySelector('.gr-builder-loading');
+          const contentElement = builderContainer.querySelector('.gr-builder-content');
+          const savedElement = builderContainer.querySelector('.gr-builder-saved');
+          const saveModal = document.getElementById('gr-save-modal');
+        
+          // Estado del configurador
+          const builderState = {
+            currentStep: 'tabla',
+            selectedItems: {
+              tabla: null,
+              ruedas: null,
+              ejes: null,
+              grip: null,
+              otros: []
+            },
+            steps: ['tabla', 'ruedas', 'ejes', 'grip', 'otros'],
+            totalPrice: 0
+          };
+        
+          // Cargar productos por categoría
+          const loadProducts = async () => {
+            try {
+              // Simulamos la carga de productos desde la API
+              // En un caso real, deberías tener endpoints específicos para cada categoría
+              const tablas = await fetch('/collections/tablas/products.json').then(res => res.json());
+              const ruedas = await fetch('/collections/ruedas/products.json').then(res => res.json());
+              const ejes = await fetch('/collections/ejes/products.json').then(res => res.json());
+              const grip = await fetch('/collections/grip/products.json').then(res => res.json());
+              const otros = await fetch('/collections/accesorios/products.json').then(res => res.json());
+          
+              // Renderizar productos en cada categoría
+              renderProducts('tabla', tablas.products);
+              renderProducts('ruedas', ruedas.products);
+              renderProducts('ejes', ejes.products);
+              renderProducts('grip', grip.products);
+              renderProducts('otros', otros.products);
+          
+              loadingElement.style.display = 'none';
+              contentElement.style.display = 'block';
+          
+              // Cargar configuraciones guardadas si el usuario está autenticado
+              loadSavedConfigurations();
+            } catch (error) {
+              console.error('Error al cargar productos:', error);
+              loadingElement.textContent = 'Error al cargar el configurador.';
+            }
+          };
+      
+          // Renderizar productos en la interfaz
+          const renderProducts = (category, products) => {
+            const container = builderContainer.querySelector(`.gr-options-${category} .gr-options-grid`);
+        
+            if (!container) return;
+        
+            let html = '';
+        
+            products.forEach(product => {
+              const price = product.variants[0].price;
+              const image = product.images[0]?.src || '';
+          
+              html += `
+                <div class="gr-option-item" data-id="${product.id}" data-name="${product.title}" data-price="${price}" data-image="${image}">
+                  <div class="gr-option-image">
+                    <img src="${image}" alt="${product.title}">
+                  </div>
+                  <div class="gr-option-info">
+                    <div class="gr-option-title">${product.title}</div>
+                    <div class="gr-option-price">$${price}</div>
+                  </div>
+                </div>
+              `;
+            });
+        
+            container.innerHTML = html;
+        
+            // Añadir event listeners a las opciones
+            const options = container.querySelectorAll('.gr-option-item');
+            options.forEach(option => {
+              option.addEventListener('click', function() {
+                selectOption(category, this);
+              });
+            });
+          };
+      
+          // Seleccionar una opción
+          const selectOption = (category, element) => {
+            // Eliminar selección anterior
+            const container = builderContainer.querySelector(`.gr-options-${category} .gr-options-grid`);
+            container.querySelectorAll('.gr-option-item').forEach(item => {
+              item.classList.remove('selected');
+            });
+        
+            // Añadir selección actual
+            element.classList.add('selected');
+        
+            // Actualizar estado
+            const id = element.dataset.id;
+            const name = element.dataset.name;
+            const price = parseFloat(element.dataset.price);
+            const image = element.dataset.image;
+        
+            if (category === 'otros') {
+              // Para otros componentes, podemos seleccionar varios
+              if (!builderState.selectedItems.otros.find(item => item.id === id)) {
+                builderState.selectedItems.otros.push({ id, name, price, image });
+              }
+            } else {
+              // Para el resto de categorías, solo uno
+              builderState.selectedItems[category] = { id, name, price, image };
+          
+              // Actualizar vista previa
+              updatePreview(category, image);
+            }
+        
+            // Actualizar información y precio
+            updateInfo();
+        
+            // Habilitar botones si es necesario
+            updateButtons();
+          };
+      
+          // Actualizar vista previa
+          const updatePreview = (category, imageUrl) => {
+            const previewImage = builderContainer.querySelector(`.gr-preview-${category}`);
+            if (previewImage) {
+              previewImage.src = imageUrl;
+              previewImage.style.display = 'block';
+            }
+          };
+      
+          // Actualizar información y precio
+          const updateInfo = () => {
+            // Actualizar texto de cada categoría
+            for (const category of builderState.steps) {
+              const infoElement = builderContainer.querySelector(`.gr-preview-item.gr-preview-${category} span`);
+          
+              if (category === 'otros') {
+                if (builderState.selectedItems.otros.length > 0) {
+                  infoElement.textContent = builderState.selectedItems.otros.map(item => item.name).join(', ');
+                } else {
+                  infoElement.textContent = 'No seleccionados';
+                }
+              } else {
+                infoElement.textContent = builderState.selectedItems[category] ? builderState.selectedItems[category].name : 'No seleccionado';
+              }
+            }
+        
+            // Calcular precio total
+            let total = 0;
+        
+            for (const category of builderState.steps) {
+              if (category === 'otros') {
+                builderState.selectedItems.otros.forEach(item => {
+                  total += item.price;
+                });
+              } else if (builderState.selectedItems[category]) {
+                total += builderState.selectedItems[category].price;
+              }
+            }
+        
+            builderState.totalPrice = total;
+        
+            // Actualizar precio en la interfaz
+            const priceElement = builderContainer.querySelector('.gr-price-value');
+            priceElement.textContent = `$${total.toFixed(2)}`;
+          };
+      
+          // Actualizar botones
+          const updateButtons = () => {
+            const prevButton = builderContainer.querySelector('.gr-button-prev');
+            const nextButton = builderContainer.querySelector('.gr-button-next');
+            const saveButton = builderContainer.querySelector('.gr-button-save');
+            const cartButton = builderContainer.querySelector('.gr-button-cart');
+        
+            // Botones de navegación
+            const currentIndex = builderState.steps.indexOf(builderState.currentStep);
+            prevButton.disabled = currentIndex === 0;
+            nextButton.disabled = currentIndex === builderState.steps.length - 1;
+        
+            // Botones de acción
+            const hasRequiredItems = builderState.selectedItems.tabla && 
+                                  builderState.selectedItems.ruedas && 
+                                  builderState.selectedItems.ejes;
+        
+            saveButton.disabled = !hasRequiredItems;
+            cartButton.disabled = !hasRequiredItems;
+          };
+      
+          // Cambiar paso
+          const changeStep = (direction) => {
+            const currentIndex = builderState.steps.indexOf(builderState.currentStep);
+            const newIndex = direction === 'next' ? currentIndex + 1 : currentIndex - 1;
+        
+            if (newIndex >= 0 && newIndex &lt; builderState.steps.length) {
+              // Actualizar paso actual
+              builderState.currentStep = builderState.steps[newIndex];
+          
+              // Actualizar UI
+              const steps = builderContainer.querySelectorAll('.gr-builder-step');
+              steps.forEach(step => {
+                step.classList.remove('active');
+              });
+          
+              const activeStep = builderContainer.querySelector(`.gr-builder-step[data-step="${builderState.currentStep}"]`);
+              activeStep.classList.add('active');
+          
+              // Mostrar opciones correspondientes
+              const optionsContainers = builderContainer.querySelectorAll('.gr-options-container');
+              optionsContainers.forEach(container => {
+                container.classList.remove('active');
+              });
+          
+              const activeContainer = builderContainer.querySelector(`.gr-options-${builderState.currentStep}`);
+              activeContainer.classList.add('active');
+          
+              // Actualizar botones
+              updateButtons();
+            }
+          };
+      
+          // Cargar configuraciones guardadas
+          const loadSavedConfigurations = async () => {
+            try {
+              const response = await window.granitoAPI.getSkateBuilds();
+          
+              if (response.error) {
+                // Si hay error de autenticación, no mostrar la sección
+                return;
+              }
+          
+              if (response.length > 0) {
+                const savedList = builderContainer.querySelector('.gr-saved-list');
+                let html = '';
+            
+                response.forEach(config => {
+                  html += `
+                    <div class="gr-saved-item" data-id="${config.id}">
+                      <div class="gr-saved-info">
+                        <h4>${config.nombre_build}</h4>
+                        <div class="gr-saved-components">
+                          <div>Tabla: ${config.tabla_nombre || 'No seleccionada'}</div>
+                          <div>Ruedas: ${config.ruedas_nombre || 'No seleccionadas'}</div>
+                          <div>Ejes: ${config.ejes_nombre || 'No seleccionadas'}</div>
+                        </div>
+                      </div>
+                      <div class="gr-saved-actions">
+                        <button class="gr-button gr-button-small gr-button-load" data-id="${config.id}">Cargar</button>
+                        <button class="gr-button gr-button-small gr-button-delete" data-id="${config.id}">Eliminar</button>
+                      </div>
+                    </div>
+                  `;
+                });
+            
+                savedList.innerHTML = html;
+                savedElement.style.display = 'block';
+            
+                // Añadir event listeners a los botones
+                const loadButtons = savedList.querySelectorAll('.gr-button-load');
+                const deleteButtons = savedList.querySelectorAll('.gr-button-delete');
+            
+                loadButtons.forEach(button => {
+                  button.addEventListener('click', function() {
+                    loadConfiguration(this.dataset.id);
+                  });
+                });
+            
+                deleteButtons.forEach(button => {
+                  button.addEventListener('click', function() {
+                    deleteConfiguration(this.dataset.id);
+                  });
+                });
+              }
+            } catch (error) {
+              console.error('Error al cargar configuraciones guardadas:', error);
+            }
+          };
+      
+          // Cargar una configuración guardada
+          const loadConfiguration = async (configId) => {
+            try {
+              const configs = await window.granitoAPI.getSkateBuilds();
+              const config = configs.find(c => c.id === configId);
+          
+              if (config) {
+                // Cargar cada componente
+                if (config.tabla_id) {
+                  const tablaElement = builderContainer.querySelector(`.gr-options-tabla .gr-option-item[data-id="${config.tabla_id}"]`);
+                  if (tablaElement) selectOption('tabla', tablaElement);
+                }
+            
+                if (config.ruedas_id) {
+                  const ruedasElement = builderContainer.querySelector(`.gr-options-ruedas .gr-option-item[data-id="${config.ruedas_id}"]`);
+                  if (ruedasElement) selectOption('ruedas', ruedasElement);
+                }
+            
+                if (config.ejes_id) {
+                    ruedasElement);
+                }
+            
+                if (config.ejes_id) {
+                  const ejesElement = builderContainer.querySelector(`.gr-options-ejes .gr-option-item[data-id="${config.ejes_id}"]`);
+                  if (ejesElement) selectOption('ejes', ejesElement);
+                }
+            
+                if (config.grip_id) {
+                  const gripElement = builderContainer.querySelector(`.gr-options-grip .gr-option-item[data-id="${config.grip_id}"]`);
+                  if (gripElement) selectOption('grip', gripElement);
+                }
+            
+                // Cargar otros componentes
+                if (config.otros_componentes) {
+                  const otrosIds = JSON.parse(config.otros_componentes);
+                  otrosIds.forEach(id => {
+                    const otroElement = builderContainer.querySelector(`.gr-options-otros .gr-option-item[data-id="${id}"]`);
+                    if (otroElement) selectOption('otros', otroElement);
+                  });
+                }
+            
+                // Volver al primer paso
+                builderState.currentStep = 'tabla';
+                changeStep(0);
+            
+                alert('Configuración cargada correctamente');
+              }
+            } catch (error) {
+              console.error('Error al cargar configuración:', error);
+              alert('Error al cargar la configuración');
+            }
+          };
+      
+          // Eliminar una configuración guardada
+          const deleteConfiguration = async (configId) => {
+            if (confirm('¿Estás seguro de que deseas eliminar esta configuración?')) {
+              try {
+                const response = await window.granitoAPI.deleteSkateBuild(configId);
+            
+                if (!response.error) {
+                  // Eliminar elemento de la interfaz
+                  const savedItem = builderContainer.querySelector(`.gr-saved-item[data-id="${configId}"]`);
+                  if (savedItem) savedItem.remove();
+              
+                  // Si no quedan configuraciones, ocultar sección
+                  const savedList = builderContainer.querySelector('.gr-saved-list');
+                  if (savedList.children.length === 0) {
+                    savedElement.style.display = 'none';
+                  }
+              
+                  alert('Configuración eliminada correctamente');
+                } else {
+                  alert('Error al eliminar la configuración');
+                }
+              } catch (error) {
+                console.error('Error al eliminar configuración:', error);
+                alert('Error al eliminar la configuración');
+              }
+            }
+          };
+      
+          // Guardar configuración
+          const saveConfiguration = async () => {
+            const nameInput = document.getElementById('gr-config-name');
+            const name = nameInput.value.trim() || 'Mi skate personalizado';
+        
+            try {
+              const data = {
+                nombre_build: name,
+                tabla_id: builderState.selectedItems.tabla?.id,
+                tabla_nombre: builderState.selectedItems.tabla?.name,
+                ruedas_id: builderState.selectedItems.ruedas?.id,
+                ruedas_nombre: builderState.selectedItems.ruedas?.name,
+                ejes_id: builderState.selectedItems.ejes?.id,
+                ejes_nombre: builderState.selectedItems.ejes?.name,
+                grip_id: builderState.selectedItems.grip?.id,
+                grip_nombre: builderState.selectedItems.grip?.name,
+                otros_componentes: JSON.stringify(builderState.selectedItems.otros.map(item => item.id))
+              };
+          
+              const response = await window.granitoAPI.createSkateBuild(data);
+          
+              if (!response.error) {
+                alert('Configuración guardada correctamente');
+                saveModal.style.display = 'none';
+            
+                // Recargar configuraciones guardadas
+                loadSavedConfigurations();
+              } else {
+                if (response.error.includes('autenticado')) {
+                  alert('Debes iniciar sesión para guardar configuraciones');
+                } else {
+                  alert('Error al guardar la configuración');
+                }
+              }
+            } catch (error) {
+              console.error('Error al guardar configuración:', error);
+              alert('Error al guardar la configuración');
+            }
+          };
+      
+          // Añadir al carrito
+          const addToCart = () => {
+            // Crear array de items para el carrito
+            const items = [];
+        
+            // Añadir componentes principales
+            for (const category of ['tabla', 'ruedas', 'ejes', 'grip']) {
+              if (builderState.selectedItems[category]) {
+                items.push({
+                  id: builderState.selectedItems[category].id,
+                  quantity: 1
+                });
+              }
+            }
+        
+            // Añadir otros componentes
+            builderState.selectedItems.otros.forEach(item => {
+              items.push({
+                id: item.id,
+                quantity: 1
+              });
+            });
+        
+            // Enviar al carrito
+            fetch('/cart/add.js', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ items })
+            })
+            .then(response => response.json())
+            .then(data => {
+              alert('¡Skate añadido al carrito!');
+              // Redirigir al carrito o actualizar la interfaz
+              window.location.href = '/cart';
+            })
+            .catch(error => {
+              console.error('Error al añadir al carrito:', error);
+              alert('Error al añadir al carrito. Por favor, inténtalo de nuevo.');
+            });
+          };
+      
+          // Event listeners
+          builderContainer.querySelector('.gr-button-prev').addEventListener('click', () => changeStep('prev'));
+          builderContainer.querySelector('.gr-button-next').addEventListener('click', () => changeStep('next'));
+          builderContainer.querySelector('.gr-button-save').addEventListener('click', () => saveModal.style.display = 'block');
+          builderContainer.querySelector('.gr-button-cart').addEventListener('click', addToCart);
+          saveModal.querySelector('.gr-modal-close').addEventListener('click', () => saveModal.style.display = 'none');
+          saveModal.querySelector('.gr-button-save-confirm').addEventListener('click', saveConfiguration);
+      
+          // Cargar productos iniciales
+          loadProducts();
+        }
+      });
+    </script>
+
+    {% stylesheet %}
+      .gr-skate-builder-section {
+        margin: 40px 0;
+      }
+      
+      .gr-section-title {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+      
+      .gr-builder-loading {
+        text-align: center;
+        padding: 20px;
+      }
+      
+      .gr-builder-content {
+        display: flex;
+        gap: 30px;
+      }
+      
+      @media screen and (max-width: 749px) {
+        .gr-builder-content {
+          flex-direction: column;
+        }
+      }
+      
+      .gr-builder-steps {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        width: 200px;
+      }
+      
+      .gr-builder-step {
+        padding: 10px;
+        border: 1px solid #e5e5e5;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+      }
+      
+      .gr-builder-step.active {
+        background-color: {{ settings.gr_color_principal }};
+        color: white;
+      }
+      
+      .gr-step-number {
+        font-weight: bold;
+      }
+      
+      .gr-builder-main {
+        flex: 1;
+      }
+      
+      .gr-builder-preview {
+        display: flex;
+        gap: 20px;
+      }
+      
+      @media screen and (max-width: 749px) {
+        .gr-builder-preview {
+          flex-direction: column;
+        }
+      }
+      
+      .gr-preview-container {
+        width: 300px;
+        height: 300px;
+        border: 1px solid #e5e5e5;
+        border-radius: 8px;
+        position: relative;
+      }
+      
+      .gr-preview-container img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+      
+      .gr-preview-info {
+        flex: 1;
+      }
+      
+      .gr-preview-list {
+        list-style: none;
+        padding: 0;
+      }
+      
+      .gr-preview-item {
+        margin-bottom: 5px;
+      }
+      
+      .gr-preview-price {
+        margin-top: 20px;
+        font-size: 1.2em;
+        font-weight: bold;
+      }
+      
+      .gr-preview-actions {
+        margin-top: 20px;
+        display: flex;
+        gap: 10px;
+      }
+      
+      .gr-builder-options {
+        margin-top: 30px;
+      }
+      
+      .gr-options-container {
+        display: none;
+      }
+      
+      .gr-options-container.active {
+        display: block;
+      }
+      
+      .gr-options-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 15px;
+      }
+      
+      .gr-option-item {
+        border: 1px solid #e5e5e5;
+        border-radius: 8px;
+        padding: 10px;
+        text-align: center;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+      }
+      
+      .gr-option-item:hover,
+      .gr-option-item.selected {
+        background-color: #f5f5f5;
+      }
+      
+      .gr-option-image {
+        height: 100px;
+        overflow: hidden;
+      }
+      
+      .gr-option-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+      
+      .gr-option-info {
+        margin-top: 10px;
+      }
+      
+      .gr-builder-navigation {
+        margin-top: 30px;
+        text-align: center;
+      }
+      
+      .gr-builder-saved {
+        margin-top: 40px;
+      }
+      
+      .gr-saved-list {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+      }
+      
+      .gr-saved-item {
+        border: 1px solid #e5e5e5;
+        border-radius: 8px;
+        padding: 15px;
+      }
+      
+      .gr-modal-content {
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        max-width: 500px;
+        margin: 0 auto;
+        position: relative;
+      }
+      
+      .gr-modal-close {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        font-size: 1.2em;
+        cursor: pointer;
+      }
+    {% endstylesheet %}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "GR Constructor de Skate",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Título de la sección",
+      "default": "Construye tu Skate"
+    },
+    {
+      "type": "textarea",
+      "id": "description",
+      "label": "Descripción",
+      "default": "Personaliza tu skate eligiendo los componentes que más te gusten."
+    }
+  ],
+  "presets": [
+    {
+      "name": "GR Constructor de Skate"
+    }
+  ]
+}
+{% endschema %}

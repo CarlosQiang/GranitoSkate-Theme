@@ -1,0 +1,463 @@
+{% comment %}
+  Calendario de eventos de skateboarding
+  - Muestra eventos próximos en formato de calendario
+  - Permite filtrar por tipo de evento, ubicación y fecha
+  - Integra con la API para obtener datos de eventos
+{% endcomment %}
+
+<div class="gr-events-calendar" id="grEventsCalendar">
+  <div class="gr-section-header">
+    <h2>{{ section.settings.title | escape }}</h2>
+    <p>{{ section.settings.subtitle | escape }}</p>
+  </div>
+
+  <div class="gr-calendar-controls">
+    <div class="gr-calendar-nav">
+      <button class="gr-btn gr-btn-icon gr-prev-month" aria-label="Mes anterior">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      </button>
+      <h3 class="gr-current-month">Cargando...</h3>
+      <button class="gr-btn gr-btn-icon gr-next-month" aria-label="Mes siguiente">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </button>
+    </div>
+    
+    <div class="gr-calendar-filters">
+      <select class="gr-select gr-event-type-filter">
+        <option value="">Todos los tipos</option>
+        <option value="competition">Competiciones</option>
+        <option value="demo">Demos</option>
+        <option value="workshop">Talleres</option>
+        <option value="meetup">Encuentros</option>
+      </select>
+      
+      <select class="gr-select gr-event-location-filter">
+        <option value="">Todas las ubicaciones</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="gr-calendar-container">
+    <div class="gr-calendar-weekdays">
+      <div>Lun</div>
+      <div>Mar</div>
+      <div>Mié</div>
+      <div>Jue</div>
+      <div>Vie</div>
+      <div>Sáb</div>
+      <div>Dom</div>
+    </div>
+    
+    <div class="gr-calendar-days" id="grCalendarDays">
+      <div class="gr-calendar-loading">
+        <div class="gr-spinner"></div>
+        <p>Cargando eventos...</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="gr-event-details" id="grEventDetails">
+    <div class="gr-no-events-selected">
+      <p>Selecciona un día para ver los eventos</p>
+    </div>
+  </div>
+
+  <template id="grEventTemplate">
+    <div class="gr-event-card">
+      <div class="gr-event-time"></div>
+      <div class="gr-event-info">
+        <h4 class="gr-event-title"></h4>
+        <p class="gr-event-location"></p>
+        <div class="gr-event-description"></div>
+        <div class="gr-event-actions">
+          <button class="gr-btn gr-btn-primary gr-event-register">Inscribirse</button>
+          <button class="gr-btn gr-btn-secondary gr-event-remind">Recordar</button>
+        </div>
+      </div>
+    </div>
+  </template>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const apiUrl = '{{ shop.metafields.granito.api_url }}';
+    const calendarEl = document.getElementById('grEventsCalendar');
+    const daysContainer = document.getElementById('grCalendarDays');
+    const eventDetails = document.getElementById('grEventDetails');
+    const currentMonthEl = calendarEl.querySelector('.gr-current-month');
+    const prevMonthBtn = calendarEl.querySelector('.gr-prev-month');
+    const nextMonthBtn = calendarEl.querySelector('.gr-next-month');
+    const eventTypeFilter = calendarEl.querySelector('.gr-event-type-filter');
+    const locationFilter = calendarEl.querySelector('.gr-event-location-filter');
+    
+    let currentDate = new Date();
+    let events = [];
+    let locations = new Set();
+    
+    // Inicializar calendario
+    function initCalendar() {
+      fetchEvents();
+      updateCalendarHeader();
+      
+      prevMonthBtn.addEventListener('click', () => {
+        currentDate.setMonth(currentDate.getMonth() - 1);
+        updateCalendar();
+      });
+      
+      nextMonthBtn.addEventListener('click', () => {
+        currentDate.setMonth(currentDate.getMonth() + 1);
+        updateCalendar();
+      });
+      
+      eventTypeFilter.addEventListener('change', updateCalendar);
+      locationFilter.addEventListener('change', updateCalendar);
+    }
+    
+    // Actualizar encabezado del calendario
+    function updateCalendarHeader() {
+      const options = { month: 'long', year: 'numeric' };
+      currentMonthEl.textContent = currentDate.toLocaleDateString('es-ES', options);
+    }
+    
+    // Obtener eventos de la API
+    function fetchEvents() {
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth() + 1;
+      
+      fetch(`${apiUrl}/events?year=${year}&month=${month}`)
+        .then(response => response.json())
+        .then(data => {
+          events = data.events || [];
+          
+          // Recopilar ubicaciones únicas para el filtro
+          locations = new Set();
+          events.forEach(event => {
+            if (event.location) {
+              locations.add(event.location);
+            }
+          });
+          
+          // Actualizar filtro de ubicaciones
+          updateLocationFilter();
+          
+          // Renderizar calendario
+          renderCalendar();
+        })
+        .catch(error => {
+          console.error('Error al cargar eventos:', error);
+          daysContainer.innerHTML = '<div class="gr-calendar-error">Error al cargar los eventos. Por favor, inténtalo de nuevo más tarde.</div>';
+        });
+    }
+    
+    // Actualizar filtro de ubicaciones
+    function updateLocationFilter() {
+      // Guardar selección actual
+      const currentSelection = locationFilter.value;
+      
+      // Limpiar opciones existentes excepto la primera
+      while (locationFilter.options.length > 1) {
+        locationFilter.remove(1);
+      }
+      
+      // Añadir nuevas opciones
+      locations.forEach(location => {
+        const option = document.createElement('option');
+        option.value = location;
+        option.textContent = location;
+        locationFilter.appendChild(option);
+      });
+      
+      // Restaurar selección si existe
+      if (currentSelection && [...locations].includes(currentSelection)) {
+        locationFilter.value = currentSelection;
+      }
+    }
+    
+    // Renderizar calendario
+    function renderCalendar() {
+      daysContainer.innerHTML = '';
+      
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+      
+      // Primer día del mes
+      const firstDay = new Date(year, month, 1);
+      // Último día del mes
+      const lastDay = new Date(year, month + 1, 0);
+      
+      // Ajustar para que la semana comience en lunes (0 = lunes, 6 = domingo)
+      let firstDayIndex = firstDay.getDay() - 1;
+      if (firstDayIndex < 0) firstDayIndex = 6; // Si es domingo (0), convertir a 6
+      
+      // Crear celdas vacías para los días anteriores al primer día del mes
+      for (let i = 0; i < firstDayIndex; i++) {
+        const dayEl = document.createElement('div');
+        dayEl.className = 'gr-calendar-day gr-empty';
+        daysContainer.appendChild(dayEl);
+      }
+      
+      // Filtrar eventos según los filtros seleccionados
+      const filteredEvents = filterEvents();
+      
+      // Crear celdas para cada día del mes
+      for (let day = 1; day <= lastDay.getDate(); day++) {
+        const dayEl = document.createElement('div');
+        dayEl.className = 'gr-calendar-day';
+        dayEl.textContent = day;
+        
+        // Comprobar si hay eventos para este día
+        const dayEvents = filteredEvents.filter(event => {
+          const eventDate = new Date(event.date);
+          return eventDate.getDate() === day && 
+                 eventDate.getMonth() === month && 
+                 eventDate.getFullYear() === year;
+        });
+        
+        if (dayEvents.length > 0) {
+          dayEl.classList.add('gr-has-events');
+          const eventCount = document.createElement('span');
+          eventCount.className = 'gr-event-count';
+          eventCount.textContent = dayEvents.length;
+          dayEl.appendChild(eventCount);
+          
+          // Añadir indicadores de tipo de evento
+          const eventTypes = new Set(dayEvents.map(event => event.type));
+          const typeIndicator = document.createElement('div');
+          typeIndicator.className = 'gr-event-type-indicators';
+          
+          eventTypes.forEach(type => {
+            const indicator = document.createElement('span');
+            indicator.className = `gr-event-type-indicator gr-event-type-${type}`;
+            typeIndicator.appendChild(indicator);
+          });
+          
+          dayEl.appendChild(typeIndicator);
+          
+          // Añadir evento click para mostrar detalles
+          dayEl.addEventListener('click', () => {
+            showEventDetails(dayEvents, day);
+            
+            // Eliminar selección anterior
+            const selectedDay = daysContainer.querySelector('.gr-calendar-day.gr-selected');
+            if (selectedDay) {
+              selectedDay.classList.remove('gr-selected');
+            }
+            
+            // Marcar este día como seleccionado
+            dayEl.classList.add('gr-selected');
+          });
+        }
+        
+        // Marcar el día actual
+        const today = new Date();
+        if (day === today.getDate() && 
+            month === today.getMonth() && 
+            year === today.getFullYear()) {
+          dayEl.classList.add('gr-today');
+        }
+        
+        daysContainer.appendChild(dayEl);
+      }
+    }
+    
+    // Filtrar eventos según los filtros seleccionados
+    function filterEvents() {
+      const typeFilter = eventTypeFilter.value;
+      const locFilter = locationFilter.value;
+      
+      return events.filter(event => {
+        // Filtrar por tipo si está seleccionado
+        if (typeFilter && event.type !== typeFilter) {
+          return false;
+        }
+        
+        // Filtrar por ubicación si está seleccionada
+        if (locFilter && event.location !== locFilter) {
+          return false;
+        }
+        
+        return true;
+      });
+    }
+    
+    // Mostrar detalles de eventos para un día específico
+    function showEventDetails(dayEvents, day) {
+      eventDetails.innerHTML = '';
+      
+      if (dayEvents.length === 0) {
+        eventDetails.innerHTML = '<div class="gr-no-events">No hay eventos para este día</div>';
+        return;
+      }
+      
+      const dateHeader = document.createElement('h3');
+      const options = { weekday: 'long', day: 'numeric', month: 'long' };
+      const displayDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+      dateHeader.textContent = displayDate.toLocaleDateString('es-ES', options);
+      dateHeader.className = 'gr-event-date-header';
+      eventDetails.appendChild(dateHeader);
+      
+      // Ordenar eventos por hora
+      dayEvents.sort((a, b) => {
+        return new Date(a.date).getTime() - new Date(b.date).getTime();
+      });
+      
+      // Crear tarjeta para cada evento
+      const template = document.getElementById('grEventTemplate');
+      
+      dayEvents.forEach(event => {
+        const eventCard = template.content.cloneNode(true);
+        
+        // Formatear hora
+        const eventDate = new Date(event.date);
+        const timeStr = eventDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+        eventCard.querySelector('.gr-event-time').textContent = timeStr;
+        
+        // Rellenar información del evento
+        eventCard.querySelector('.gr-event-title').textContent = event.title;
+        eventCard.querySelector('.gr-event-location').textContent = event.location;
+        eventCard.querySelector('.gr-event-description').innerHTML = event.description;
+        
+        // Añadir clases según el tipo de evento
+        const cardEl = eventCard.querySelector('.gr-event-card');
+        cardEl.classList.add(`gr-event-type-${event.type}`);
+        
+        // Configurar botones de acción
+        const registerBtn = eventCard.querySelector('.gr-event-register');
+        registerBtn.addEventListener('click', () => registerForEvent(event.id));
+        
+        const remindBtn = eventCard.querySelector('.gr-event-remind');
+        remindBtn.addEventListener('click', () => setEventReminder(event.id));
+        
+        eventDetails.appendChild(eventCard);
+      });
+    }
+    
+    // Registrarse para un evento
+    function registerForEvent(eventId) {
+      // Verificar si el usuario está autenticado
+      fetch(`${apiUrl}/user/status`, {
+        credentials: 'include'
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.authenticated) {
+          // Usuario autenticado, proceder con el registro
+          return fetch(`${apiUrl}/events/${eventId}/register`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          });
+        } else {
+          // Usuario no autenticado, redirigir a login
+          window.location.href = '/account/login?redirect_to=' + encodeURIComponent(window.location.pathname);
+          throw new Error('Usuario no autenticado');
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert('¡Te has registrado correctamente para este evento!');
+          // Actualizar UI si es necesario
+        } else {
+          alert('Error al registrarse: ' + data.message);
+        }
+      })
+      .catch(error => {
+        console.error('Error al registrarse para el evento:', error);
+      });
+    }
+    
+    // Establecer recordatorio para un evento
+    function setEventReminder(eventId) {
+      // Verificar si el usuario está autenticado
+      fetch(`${apiUrl}/user/status`, {
+        credentials: 'include'
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.authenticated) {
+          // Usuario autenticado, proceder con el recordatorio
+          return fetch(`${apiUrl}/events/${eventId}/remind`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          });
+        } else {
+          // Usuario no autenticado, redirigir a login
+          window.location.href = '/account/login?redirect_to=' + encodeURIComponent(window.location.pathname);
+          throw new Error('Usuario no autenticado');
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert('¡Recordatorio establecido correctamente!');
+          // Actualizar UI si es necesario
+        } else {
+          alert('Error al establecer recordatorio: ' + data.message);
+        }
+      })
+      .catch(error => {
+        console.error('Error al establecer recordatorio:', error);
+      });
+    }
+    
+    // Actualizar calendario (cuando cambian los filtros o el mes)
+    function updateCalendar() {
+      updateCalendarHeader();
+      
+      // Si cambiamos de mes, necesitamos obtener nuevos eventos
+      if (prevMonthBtn.clicked || nextMonthBtn.clicked) {
+        fetchEvents();
+      } else {
+        // Solo filtrar y renderizar con los eventos actuales
+        renderCalendar();
+      }
+    }
+    
+    // Iniciar calendario
+    initCalendar();
+  });
+</script>
+
+{% schema %}
+{
+  "name": "Calendario de eventos",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Título",
+      "default": "Calendario de eventos"
+    },
+    {
+      "type": "text",
+      "id": "subtitle",
+      "label": "Subtítulo",
+      "default": "No te pierdas ningún evento de skateboarding"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_filters",
+      "label": "Mostrar filtros",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_reminders",
+      "label": "Habilitar recordatorios",
+      "default": true
+    }
+  ],
+  "presets": [
+    {
+      "name": "Calendario de eventos",
+      "category": "Granito"
+    }
+  ]
+}
+{% endschema %}

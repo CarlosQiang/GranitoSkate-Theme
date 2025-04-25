@@ -1,0 +1,291 @@
+{% comment %}
+  Sección de guía de tallas
+{% endcomment %}
+
+<div class="gr-size-guide-section" id="gr-size-guide-container">
+  <div class="page-width">
+    {% if section.settings.title != blank %}
+      <h2 class="gr-section-title">{{ section.settings.title }}</h2>
+    {% endif %}
+    
+    {% if section.settings.description != blank %}
+      <div class="gr-section-description">{{ section.settings.description }}</div>
+    {% endif %}
+    
+    <div class="gr-size-guide-tabs">
+      <div class="gr-tabs-header">
+        {% for block in section.blocks %}
+          {% if block.type == 'category' %}
+            <button 
+              class="gr-tab-button {% if forloop.first %}active{% endif %}" 
+              data-tab="tab-{{ block.id }}"
+              {{ block.shopify_attributes }}
+            >
+              {{ block.settings.title }}
+            </button>
+          {% endif %}
+        {% endfor %}
+      </div>
+      
+      <div class="gr-tabs-content">
+        {% for block in section.blocks %}
+          {% if block.type == 'category' %}
+            <div 
+              id="tab-{{ block.id }}" 
+              class="gr-tab-content {% if forloop.first %}active{% endif %}"
+              {{ block.shopify_attributes }}
+            >
+              {% if block.settings.image != blank %}
+                <div class="gr-size-guide-image">
+                  <img src="{{ block.settings.image | img_url: 'master' }}" alt="{{ block.settings.title }}" loading="lazy">
+                </div>
+              {% endif %}
+              
+              {% if block.settings.table_html != blank %}
+                <div class="gr-size-guide-table">
+                  {{ block.settings.table_html }}
+                </div>
+              {% endif %}
+              
+              {% if block.settings.additional_info != blank %}
+                <div class="gr-size-guide-info">
+                  {{ block.settings.additional_info }}
+                </div>
+              {% endif %}
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+    
+    {% if section.settings.show_measurement_tips %}
+      <div class="gr-measurement-tips">
+        <h3>{{ section.settings.tips_title }}</h3>
+        <div class="gr-tips-content">
+          {{ section.settings.tips_content }}
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const tabButtons = document.querySelectorAll('.gr-tab-button');
+    const tabContents = document.querySelectorAll('.gr-tab-content');
+    
+    tabButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const tabId = this.dataset.tab;
+        
+        // Desactivar todos los botones y contenidos
+        tabButtons.forEach(btn => btn.classList.remove('active'));
+        tabContents.forEach(content => content.classList.remove('active'));
+        
+        // Activar el botón y contenido seleccionado
+        this.classList.add('active');
+        document.getElementById(tabId).classList.add('active');
+      });
+    });
+  });
+</script>
+
+<style>
+  .gr-size-guide-section {
+    margin: 40px 0;
+  }
+  
+  .gr-section-title {
+    text-align: center;
+    margin-bottom: 10px;
+    color: {{ settings.gr_color_principal }};
+  }
+  
+  .gr-section-description {
+    text-align: center;
+    margin-bottom: 30px;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .gr-size-guide-tabs {
+    margin-bottom: 30px;
+  }
+  
+  .gr-tabs-header {
+    display: flex;
+    flex-wrap: wrap;
+    border-bottom: 1px solid #e5e5e5;
+    margin-bottom: 20px;
+  }
+  
+  .gr-tab-button {
+    background: none;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 1em;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s ease;
+  }
+  
+  .gr-tab-button.active {
+    border-bottom-color: {{ settings.gr_color_principal }};
+    color: {{ settings.gr_color_principal }};
+    font-weight: bold;
+  }
+  
+  .gr-tab-content {
+    display: none;
+  }
+  
+  .gr-tab-content.active {
+    display: block;
+  }
+  
+  .gr-size-guide-image {
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  
+  .gr-size-guide-image img {
+    max-width: 100%;
+    height: auto;
+  }
+  
+  .gr-size-guide-table {
+    margin-bottom: 20px;
+    overflow-x: auto;
+  }
+  
+  .gr-size-guide-table table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .gr-size-guide-table th,
+  .gr-size-guide-table td {
+    border: 1px solid #e5e5e5;
+    padding: 10px;
+    text-align: center;
+  }
+  
+  .gr-size-guide-table th {
+    background-color: #f5f5f5;
+    font-weight: bold;
+  }
+  
+  .gr-size-guide-info {
+    margin-bottom: 20px;
+  }
+  
+  .gr-measurement-tips {
+    margin-top: 30px;
+    padding: 20px;
+    background-color: #f5f5f5;
+    border-radius: 8px;
+  }
+  
+  .gr-measurement-tips h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: {{ settings.gr_color_principal }};
+  }
+</style>
+
+{% schema %}
+{
+  "name": "GR Guía de Tallas",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Título",
+      "default": "Guía de Tallas"
+    },
+    {
+      "type": "textarea",
+      "id": "description",
+      "label": "Descripción",
+      "default": "Utiliza nuestra guía de tallas para encontrar la medida perfecta para ti."
+    },
+    {
+      "type": "checkbox",
+      "id": "show_measurement_tips",
+      "label": "Mostrar consejos de medición",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "tips_title",
+      "label": "Título de consejos",
+      "default": "Consejos para medir correctamente"
+    },
+    {
+      "type": "richtext",
+      "id": "tips_content",
+      "label": "Contenido de consejos",
+      "default": "<p>1. Utiliza una cinta métrica flexible.</p><p>2. Mide sobre ropa ligera.</p><p>3. Mantén la cinta métrica ajustada pero no apretada.</p><p>4. Para tablas de skate, mide el ancho en pulgadas.</p>"
+    }
+  ],
+  "blocks": [
+    {
+      "name": "Categoría",
+      "type": "category",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Título de la categoría",
+          "default": "Tablas"
+        },
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Imagen de guía"
+        },
+        {
+          "type": "html",
+          "id": "table_html",
+          "label": "HTML de la tabla",
+          "default": "<table><tr><th>Altura del skater</th><th>Ancho de tabla recomendado</th></tr><tr><td>Menos de 1.50m</td><td>7.5\" - 7.75\"</td></tr><tr><td>1.50m - 1.70m</td><td>7.75\" - 8.0\"</td></tr><tr><td>1.70m - 1.85m</td><td>8.0\" - 8.25\"</td></tr><tr><td>Más de 1.85m</td><td>8.25\" - 8.5\"</td></tr></table>"
+        },
+        {
+          "type": "richtext",
+          "id": "additional_info",
+          "label": "Información adicional",
+          "default": "<p>El ancho de la tabla es una preferencia personal y puede variar según el estilo de patinaje. Las tablas más estrechas son mejores para trucos técnicos de calle, mientras que las tablas más anchas ofrecen mayor estabilidad para rampas y bowls.</p>"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "GR Guía de Tallas",
+      "blocks": [
+        {
+          "type": "category",
+          "settings": {
+            "title": "Tablas"
+          }
+        },
+        {
+          "type": "category",
+          "settings": {
+            "title": "Ropa"
+          }
+        },
+        {
+          "type": "category",
+          "settings": {
+            "title": "Zapatillas"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

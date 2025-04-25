@@ -1,0 +1,63 @@
+{% comment %}
+  Elemento de preguntas frecuentes
+  Uso: {% render 'gr-faq-item', faq: faq, index: forloop.index %}
+{% endcomment %}
+
+<div class="gr-faq-item">
+  <button class="gr-faq-question" id="faq-question-{{ index }}" aria-expanded="false" aria-controls="faq-answer-{{ index }}">
+    {{ faq.pregunta }}
+    <span class="gr-faq-icon">+</span>
+  </button>
+  
+  <div class="gr-faq-answer" id="faq-answer-{{ index }}" aria-labelledby="faq-question-{{ index }}" hidden>
+    {{ faq.respuesta }}
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const faqQuestion = document.getElementById('faq-question-{{ index }}');
+    const faqAnswer = document.getElementById('faq-answer-{{ index }}');
+    
+    if (faqQuestion && faqAnswer) {
+      faqQuestion.addEventListener('click', function() {
+        const expanded = this.getAttribute('aria-expanded') === 'true';
+        
+        this.setAttribute('aria-expanded', !expanded);
+        faqAnswer.hidden = expanded;
+        
+        const icon = this.querySelector('.gr-faq-icon');
+        icon.textContent = expanded ? '+' : '-';
+      });
+    }
+  });
+</script>
+
+<style>
+  .gr-faq-item {
+    border-bottom: 1px solid #e5e5e5;
+  }
+  
+  .gr-faq-question {
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    padding: 15px 0;
+    font-size: 1.1em;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .gr-faq-icon {
+    font-size: 1.5em;
+    color: {{ settings.gr_color_principal }};
+  }
+  
+  .gr-faq-answer {
+    padding: 0 0 15px;
+  }
+</style>

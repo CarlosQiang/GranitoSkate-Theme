@@ -1,0 +1,436 @@
+{% assign collection = collection | default: collection %}
+
+<div class="gr-collection-template">
+  <div class="gr-collection-header">
+    <h1>{{ collection.title }}</h1>
+    {% if collection.description != blank %}
+      <div class="gr-collection-description">
+        {{ collection.description }}
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="gr-collection-filters">
+    <div class="gr-filter-group">
+      <label for="gr-sort-by">Ordenar por:</label>
+      <select id="gr-sort-by" class="gr-sort-by">
+        <option value="manual">Destacados</option>
+        <option value="price-ascending">Precio: Menor a Mayor</option>
+        <option value="price-descending">Precio: Mayor a Menor</option>
+        <option value="title-ascending">Alfabéticamente: A-Z</option>
+        <option value="title-descending">Alfabéticamente: Z-A</option>
+        <option value="created-ascending">Fecha: Antiguo a Nuevo</option>
+        <option value="created-descending">Fecha: Nuevo a Antiguo</option>
+        <option value="best-selling">Más Vendidos</option>
+      </select>
+    </div>
+
+    <div class="gr-filter-group">
+      <button class="gr-filter-toggle" aria-expanded="false" aria-controls="gr-filters-container">
+        Filtros <span class="gr-filter-count"></span>
+      </button>
+    </div>
+  </div>
+
+  <div id="gr-filters-container" class="gr-filters-container" style="display: none;">
+    <div class="gr-filters-grid">
+      {% for filter in collection.filters %}
+        <div class="gr-filter">
+          <details class="gr-filter-details">
+            <summary class="gr-filter-summary">
+              <div class="gr-filter-title">{{ filter.label }}</div>
+              <span class="gr-filter-icon">+</span>
+            </summary>
+            <div class="gr-filter-content">
+              <ul class="gr-filter-list">
+                {% case filter.type %}
+                  {% when 'boolean' or 'list' %}
+                    {% for filter_value in filter.values %}
+                      <li class="gr-filter-item">
+                        <label class="gr-filter-checkbox">
+                          <input type="checkbox" 
+                                name="{{ filter_value.param_name }}" 
+                                value="{{ filter_value.value }}" 
+                                {% if filter_value.active %}checked{% endif %}>
+                          <span class="gr-filter-label">{{ filter_value.label }}</span>
+                          <span class="gr-filter-count">({{ filter_value.count }})</span>
+                        </label>
+                      </li>
+                    {% endfor %}
+                  {% when 'price_range' %}
+                    <div class="gr-price-range">
+                      <div class="gr-price-inputs">
+                        <label>
+                          <span>Desde</span>
+                          <input type="number" 
+                                name="{{ filter.min_value.param_name }}" 
+                                value="{{ filter.min_value.value | default: filter.range_min | money_without_currency | replace: ',', '' }}" 
+                                min="0" 
+                                max="{{ filter.range_max | money_without_currency | replace: ',', '' }}">
+                        </label>
+                        <label>
+                          <span>Hasta</span>
+                          <input type="number" 
+                                name="{{ filter.max_value.param_name }}" 
+                                value="{{ filter.max_value.value | default: filter.range_max | money_without_currency | replace: ',', '' }}" 
+                                min="0" 
+                                max="{{ filter.range_max | money_without_currency | replace: ',', '' }}">
+                        </label>
+                      </div>
+                      <button type="button" class="gr-price-range-apply">Aplicar</button>
+                    </div>
+                {% endcase %}
+              </ul>
+            </div>
+          </details>
+        </div>
+      {% endfor %}
+    </div>
+    <div class="gr-filters-footer">
+      <button type="button" class="gr-filters-clear">Limpiar filtros</button>
+      <button type="button" class="gr-filters-apply">Aplicar filtros</button>
+    </div>
+  </div>
+
+  <div class="gr-active-filters">
+    {% if collection.current_vendor or collection.current_type %}
+      <div class="gr-active-filters-list">
+        {% if collection.current_vendor %}
+          <a class="gr-active-filter" href="{{ collection.url }}">
+            {{ collection.current_vendor }} <span aria-hidden="true">×</span>
+          </a>
+        {% endif %}
+        {% if collection.current_type %}
+          <a class="gr-active-filter" href="{{ collection.url }}">
+            {{ collection.current_type }} <span aria-hidden="true">×</span>
+          </a>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="gr-collection-products">
+    {% paginate collection.products by 24 %}
+      <div class="gr-products-grid">
+        {% for product in collection.products %}
+          <div class="gr-product-card">
+            <a href="{{ product.url }}" class="gr-product-card-link">
+              <div class="gr-product-card-image">
+                {% if product.featured_image != blank %}
+                  <img src="{{ product.featured_image | img_url: '300x300', crop: 'center' }}" 
+                      alt="{{ product.featured_image.alt | escape }}"
+                      loading="lazy"
+                      width="300"
+                      height="300">
+                {% else %}
+                  {{ 'product-1' | placeholder_svg_tag: 'gr-product-card-image-placeholder' }}
+                {% endif %}
+                
+                {% if product.compare_at_price > product.price %}
+                  <span class="gr-product-badge gr-sale-badge">Oferta</span>
+                {% endif %}
+                
+                {% if product.available == false %}
+                  <span class="gr-product-badge gr-sold-out-badge">Agotado</span>
+                {% endif %}
+              </div>
+              
+              <div class="gr-product-card-info">
+                <h3 class="gr-product-card-title">{{ product.title }}</h3>
+                
+                <div class="gr-product-card-price">
+                  {% if product.compare_at_price > product.price %}
+                    <span class="gr-product-price-sale">{{ product.price | money }}</span>
+                    <span class="gr-product-price-compare">{{ product.compare_at_price | money }}</span>
+                  {% else %}
+                    <span class="gr-product-price">{{ product.price | money }}</span>
+                  {% endif %}
+                </div>
+                
+                {% if product.variants.size > 1 %}
+                  <div class="gr-product-card-variants">{{ product.variants.size }} variantes</div>
+                {% endif %}
+              </div>
+            </a>
+            
+            <div class="gr-product-card-actions">
+              {% render 'gr-wishlist-button', product: product %}
+              
+              {% if product.available %}
+                <button class="gr-quick-add-button" 
+                        data-product-id="{{ product.id }}" 
+                        data-variant-id="{{ product.selected_or_first_available_variant.id }}">
+                  Añadir rápido
+                </button>
+              {% else %}
+                <button class="gr-notify-button" data-product-id="{{ product.id }}">
+                  Notificarme
+                </button>
+              {% endif %}
+            </div>
+          </div>
+        {% else %}
+          <div class="gr-no-products">
+            <p>No hay productos que coincidan con tu búsqueda.</p>
+          </div>
+        {% endfor %}
+      </div>
+      
+      {% if paginate.pages > 1 %}
+        <div class="gr-pagination">
+          {{ paginate | default_pagination }}
+        </div>
+      {% endif %}
+    {% endpaginate %}
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Sort functionality
+    const sortSelect = document.querySelector('.gr-sort-by');
+    if (sortSelect) {
+      sortSelect.addEventListener('change', function() {
+        const url = new URL(window.location.href);
+        url.searchParams.set('sort_by', this.value);
+        window.location.href = url.toString();
+      });
+      
+      // Set current sort value
+      const currentSort = new URLSearchParams(window.location.search).get('sort_by');
+      if (currentSort) {
+        sortSelect.value = currentSort;
+      }
+    }
+    
+    // Filter toggle
+    const filterToggle = document.querySelector('.gr-filter-toggle');
+    const filtersContainer = document.getElementById('gr-filters-container');
+    
+    if (filterToggle && filtersContainer) {
+      filterToggle.addEventListener('click', function() {
+        const expanded = this.getAttribute('aria-expanded') === 'true';
+        this.setAttribute('aria-expanded', !expanded);
+        filtersContainer.style.display = expanded ? 'none' : 'block';
+      });
+    }
+    
+    // Price range filter
+    const priceRangeApply = document.querySelector('.gr-price-range-apply');
+    if (priceRangeApply) {
+      priceRangeApply.addEventListener('click', function() {
+        const minInput = document.querySelector('input[name="filter.v.price.gte"]');
+        const maxInput = document.querySelector('input[name="filter.v.price.lte"]');
+        
+        if (minInput && maxInput) {
+          const url = new URL(window.location.href);
+          
+          if (minInput.value) {
+            url.searchParams.set(minInput.name, minInput.value);
+          } else {
+            url.searchParams.delete(minInput.name);
+          }
+          
+          if (maxInput.value) {
+            url.searchParams.set(maxInput.name, maxInput.value);
+          } else {
+            url.searchParams.delete(maxInput.name);
+          }
+          
+          window.location.href = url.toString();
+        }
+      });
+    }
+    
+    // Apply filters
+    const filtersApply = document.querySelector('.gr-filters-apply');
+    if (filtersApply) {
+      filtersApply.addEventListener('click', function() {
+        const filterCheckboxes = document.querySelectorAll('.gr-filter-checkbox input:checked');
+        const url = new URL(window.location.href);
+        
+        // Clear existing filter params
+        [...url.searchParams.keys()].forEach(key => {
+          if (key.startsWith('filter.')) {
+            url.searchParams.delete(key);
+          }
+        });
+        
+        // Add checked filters
+        filterCheckboxes.forEach(checkbox => {
+          url.searchParams.append(checkbox.name, checkbox.value);
+        });
+        
+        window.location.href = url.toString();
+      });
+    }
+    
+    // Clear filters
+    const filtersClear = document.querySelector('.gr-filters-clear');
+    if (filtersClear) {
+      filtersClear.addEventListener('click', function() {
+        const url = new URL(window.location.href);
+        
+        // Remove all filter params
+        [...url.searchParams.keys()].forEach(key => {
+          if (key.startsWith('filter.')) {
+            url.searchParams.delete(key);
+          }
+        });
+        
+        window.location.href = url.toString();
+      });
+    }
+    
+    // Quick add functionality
+    const quickAddButtons = document.querySelectorAll('.gr-quick-add-button');
+    quickAddButtons.forEach(button => {
+      button.addEventListener('click', function(e) {
+        e.preventDefault();
+        const variantId = this.dataset.variantId;
+        
+        // Change button text to indicate loading
+        const originalText = this.textContent;
+        this.textContent = 'Añadiendo...';
+        this.disabled = true;
+        
+        // Add to cart using Fetch API
+        fetch('/cart/add.js', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            items: [{
+              id: variantId,
+              quantity: 1
+            }]
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.status) {
+            // Error handling
+            this.textContent = 'Error';
+            setTimeout(() => {
+              this.textContent = originalText;
+              this.disabled = false;
+            }, 2000);
+          } else {
+            // Success
+            this.textContent = 'Añadido';
+            setTimeout(() => {
+              this.textContent = originalText;
+              this.disabled = false;
+            }, 2000);
+            
+            // Update cart count and open cart drawer if it exists
+            document.dispatchEvent(new CustomEvent('cart:refresh'));
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          this.textContent = 'Error';
+          setTimeout(() => {
+            this.textContent = originalText;
+            this.disabled = false;
+          }, 2000);
+        });
+      });
+    });
+  });
+</script>
+
+{% schema %}
+{
+  "name": "Plantilla de colección",
+  "settings": [
+    {
+      "type": "select",
+      "id": "products_per_page",
+      "label": "Productos por página",
+      "options": [
+        {
+          "value": "12",
+          "label": "12 productos"
+        },
+        {
+          "value": "24",
+          "label": "24 productos"
+        },
+        {
+          "value": "36",
+          "label": "36 productos"
+        },
+        {
+          "value": "48",
+          "label": "48 productos"
+        }
+      ],
+      "default": "24"
+    },
+    {
+      "type": "select",
+      "id": "grid_columns",
+      "label": "Columnas en escritorio",
+      "options": [
+        {
+          "value": "2",
+          "label": "2 columnas"
+        },
+        {
+          "value": "3",
+          "label": "3 columnas"
+        },
+        {
+          "value": "4",
+          "label": "4 columnas"
+        }
+      ],
+      "default": "3"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_collection_image",
+      "label": "Mostrar imagen de colección",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_collection_description",
+      "label": "Mostrar descripción de colección",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_filtering",
+      "label": "Habilitar filtrado",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_sorting",
+      "label": "Habilitar ordenamiento",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_vendor",
+      "label": "Mostrar vendedor",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "show_quick_add",
+      "label": "Mostrar botón de añadir rápido",
+      "default": true
+    }
+  ],
+  "presets": [
+    {
+      "name": "Plantilla de colección",
+      "category": "Colección"
+    }
+  ]
+}
+{% endschema %}

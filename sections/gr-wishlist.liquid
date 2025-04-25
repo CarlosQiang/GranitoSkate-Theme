@@ -1,0 +1,214 @@
+{% comment %}
+  Sección de lista de favoritos
+{% endcomment %}
+
+<div class="gr-wishlist-section" id="gr-wishlist-container">
+  <div class="page-width">
+    {% if section.settings.title != blank %}
+      <h2 class="gr-section-title">{{ section.settings.title }}</h2>
+    {% endif %}
+    
+    <div class="gr-wishlist-loading">Cargando favoritos...</div>
+    
+    <div class="gr-wishlist-empty" style="display: none;">
+      <p>No tienes productos en tu lista de favoritos.</p>
+      <a href="/collections/all" class="gr-button">Ver productos</a>
+    </div>
+    
+    <div class="gr-wishlist-grid" style="display: none;">
+      <!-- Los productos favoritos se cargarán aquí dinámicamente -->
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    if (window.granitoAPI) {
+      const wishlistContainer = document.getElementById('gr-wishlist-container');
+      const loadingElement = wishlistContainer.querySelector('.gr-wishlist-loading');
+      const emptyElement = wishlistContainer.querySelector('.gr-wishlist-empty');
+      const wishlistGrid = wishlistContainer.querySelector('.gr-wishlist-grid');
+      
+      window.granitoAPI.getWishlist()
+        .then(response => {
+          loadingElement.style.display = 'none';
+          
+          if (response.error) {
+            // Si hay un error de autenticación, mostrar mensaje para iniciar sesión
+            if (response.error.includes('autenticado')) {
+              emptyElement.innerHTML = `
+                <p>Debes iniciar sesión para ver tu lista de favoritos.</p>
+                <a href="/account/login" class="gr-button">Iniciar sesión</a>
+              `;
+            } else {
+              emptyElement.innerHTML = `<p>Error al cargar la lista de favoritos.</p>`;
+            }
+            emptyElement.style.display = 'block';
+            return;
+          }
+          
+          if (response.length === 0) {
+            emptyElement.style.display = 'block';
+            return;
+          }
+          
+          // Crear HTML para cada producto favorito
+          let wishlistHTML = '';
+          
+          response.forEach(item => {
+            wishlistHTML += `
+              <div class="gr-wishlist-item" data-product-id="${item.id_producto}">
+                <div class="gr-wishlist-item-content">
+                  <h3 class="gr-wishlist-item-title">
+                    <a href="/products/${item.id_producto}">${item.nombre_producto}</a>
+                  </h3>
+                  
+                  <div class="gr-wishlist-item-actions">
+                    <a href="/products/${item.id_producto}" class="gr-button gr-button-small">Ver producto</a>
+                    <button class="gr-button gr-button-small gr-button-remove" data-product-id="${item.id_producto}">Eliminar</button>
+                  </div>
+                </div>
+              </div>
+            `;
+          });
+          
+          wishlistGrid.innerHTML = wishlistHTML;
+          wishlistGrid.style.display = 'grid';
+          
+          // Añadir event listeners para los botones de eliminar
+          const removeButtons = wishlistGrid.querySelectorAll('.gr-button-remove');
+          removeButtons.forEach(button => {
+            button.addEventListener('click', function() {
+              const productId = this.dataset.productId;
+              
+              window.granitoAPI.removeFromWishlist(productId)
+                .then(response => {
+                  if (response.error) {
+                    alert('Error al eliminar el producto de favoritos. Por favor, inténtalo de nuevo.');
+                    return;
+                  }
+                  
+                  // Eliminar el elemento de la interfaz
+                  const itemElement = wishlistGrid.querySelector(`.gr-wishlist-item[data-product-id="${productId}"]`);
+                  if (itemElement) {
+                    itemElement.remove();
+                  }
+                  
+                  // Si no quedan elementos, mostrar mensaje de vacío
+                  if (wishlistGrid.children.length === 0) {
+                    wishlistGrid.style.display = 'none';
+                    emptyElement.style.display = 'block';
+                  }
+                });
+            });
+          });
+        });
+    }
+  });
+</script>
+
+<style>
+  .gr-wishlist-section {
+    margin: 40px 0;
+  }
+  
+  .gr-section-title {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  
+  .gr-wishlist-loading,
+  .gr-wishlist-empty {
+    text-align: center;
+    padding: 20px;
+  }
+  
+  .gr-button {
+    display: inline-block;
+    background-color: {{ settings.gr_color_principal }};
+    color: white;
+    padding: 10px 15px;
+    border-radius: 4px;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  
+  .gr-button:hover {
+    background-color: {{ settings.gr_color_secundario }};
+  }
+  
+  .gr-button-small {
+    padding: 5px 10px;
+    font-size: 0.9em;
+  }
+  
+  .gr-button-remove {
+    background-color: #e53935;
+  }
+  
+  .gr-button-remove:hover {
+    background-color: #c62828;
+  }
+  
+  .gr-wishlist-grid {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 20px;
+  }
+  
+  @media screen and (min-width: 750px) {
+    .gr-wishlist-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  @media screen and (min-width: 990px) {
+    .gr-wishlist-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  
+  .gr-wishlist-item {
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    padding: 15px;
+  }
+  
+  .gr-wishlist-item-title {
+    margin-top: 0;
+    margin-bottom: 15px;
+  }
+  
+  .gr-wishlist-item-title a {
+    color: {{ settings.gr_color_principal }};
+    text-decoration: none;
+  }
+  
+  .gr-wishlist-item-actions {
+    display: flex;
+    gap: 10px;
+  }
+</style>
+
+{% schema %}
+{
+  "name": "GR Lista de Favoritos",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Título de la sección",
+      "default": "Mi lista de favoritos"
+    }
+  ],
+  "presets": [
+    {
+      "name": "GR Lista de Favoritos"
+    }
+  ]
+}
+{% endschema %}

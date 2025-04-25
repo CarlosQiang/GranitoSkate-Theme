@@ -1,0 +1,326 @@
+{% comment %}
+Sección de competiciones de skate
+{% endcomment %}
+
+<div class="gr-competitions-section py-12">
+<div class="page-width">
+{% if section.settings.title != blank %}
+<h2 class="gr-section-title text-3xl font-bold text-center mb-4">{{ section.settings.title }}</h2>
+{% endif %}
+
+{% if section.settings.description != blank %}
+<div class="gr-section-description text-center text-gray-600 mb-8">{{ section.settings.description }}</div>
+{% endif %}
+
+<div class="gr-competitions-loading text-center text-gray-500">Cargando competiciones...</div>
+
+<div class="gr-competitions-grid hidden grid-cols-1 sm:grid-cols-2 lg:grid-cols-{{ section.settings.columns_desktop }} gap-6">
+&lt;!-- Las competiciones se cargarán aquí dinámicamente -->
+</div>
+</div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+const competitionsContainer = document.getElementById('gr-competitions-container');
+const loadingElement = competitionsContainer.querySelector('.gr-competitions-loading');
+const competitionsGrid = competitionsContainer.querySelector('.gr-competitions-grid');
+
+if (window.granitoAPI) {
+// Cargar competiciones desde la API
+window.granitoAPI.getCompetitions(true) // Solo competiciones activas
+.then(response => {
+loadingElement.style.display = 'none';
+
+if (response.error) {
+competitionsGrid.innerHTML = '<p>Error al cargar las competiciones.</p>';
+competitionsGrid.style.display = 'block';
+return;
+}
+
+if (response.length === 0) {
+competitionsGrid.innerHTML = '<p>No hay competiciones disponibles actualmente.</p>';
+competitionsGrid.style.display = 'block';
+return;
+}
+
+// Ordenar competiciones por fecha (más cercanas primero)
+const competitions = response.sort((a, b) => {
+return new Date(a.fecha) - new Date(b.fecha);
+});
+
+// Crear HTML para cada competición
+let competitionsHTML = '';
+
+competitions.forEach(competition => {
+const date = new Date(competition.fecha);
+const formattedDate = date.toLocaleDateString('es-ES', {
+  day: '2-digit',
+  month: 'long',
+  year: 'numeric'
+});
+
+competitionsHTML += `
+  <div class="gr-competition-card border border-gray-200 rounded-lg overflow-hidden shadow-md transition-transform transform hover:translate-y-[-5px] hover:shadow-lg">
+    <a href="/pages/competition?id=${competition.id}" class="gr-competition-link block">
+      <div class="gr-competition-image relative pb-[56.25%] overflow-hidden">
+        <img src="${competition.imagen_url || '/placeholder.svg?height=300&width=500'}" alt="${competition.nombre}" loading="lazy" class="absolute top-0 left-0 w-full h-full object-cover transition-transform transform hover:scale-110">
+        ${competition.inscripcion_abierta ? '<span class="gr-competition-badge absolute top-2 right-2 bg-indigo-600 text-white py-1 px-2 rounded-md text-xs uppercase">Inscripción abierta</span>' : ''}
+      </div>
+      <div class="gr-competition-info p-4">
+        <h3 class="gr-competition-name text-xl font-semibold">${competition.nombre}</h3>
+        <p class="gr-competition-date text-gray-600">${formattedDate}</p>
+        <p class="gr-competition-location text-gray-600">${competition.ubicacion}</p>
+        ${competition.descripcion ? `<p class="gr-competition-description text-gray-700">${competition.descripcion}</p>` : ''}
+      </div>
+    </a>
+  </div>
+`;
+});
+
+competitionsGrid.innerHTML = competitionsHTML;
+competitionsGrid.style.display = 'grid';
+})
+.catch(error => {
+console.error('Error al cargar competiciones:', error);
+loadingElement.textContent = 'Error al cargar las competiciones.';
+});
+} else {
+// Si la API no está disponible, mostrar competiciones estáticas de ejemplo
+loadingElement.style.display = 'none';
+
+// Datos de ejemplo
+const exampleCompetitions = [
+{% for block in section.blocks %}
+{
+id: '{{ block.id }}',
+nombre: '{{ block.settings.nombre }}',
+fecha: '{{ block.settings.fecha }}',
+ubicacion: '{{ block.settings.ubicacion }}',
+descripcion: '{{ block.settings.descripcion }}',
+inscripcion_abierta: {{ block.settings.inscripcion_abierta }},
+imagen_url: '{{ block.settings.imagen | img_url: "master" }}'
+}{% unless forloop.last %},{% endunless %}
+{% endfor %}
+];
+
+if (exampleCompetitions.length === 0) {
+competitionsGrid.innerHTML = '<p>No hay competiciones disponibles actualmente.</p>';
+competitionsGrid.style.display = 'block';
+return;
+}
+
+// Crear HTML para cada competición
+let competitionsHTML = '';
+
+exampleCompetitions.forEach(competition => {
+const date = new Date(competition.fecha);
+const formattedDate = date.toLocaleDateString('es-ES', {
+day: '2-digit',
+month: 'long',
+year: 'numeric'
+});
+
+competitionsHTML += `
+<div class="gr-competition-card border border-gray-200 rounded-lg overflow-hidden shadow-md transition-transform transform hover:translate-y-[-5px] hover:shadow-lg">
+<a href="/pages/competition?id=${competition.id}" class="gr-competition-link block">
+  <div class="gr-competition-image relative pb-[56.25%] overflow-hidden">
+    <img src="${competition.imagen_url || '/placeholder.svg?height=300&width=500'}" alt="${competition.nombre}" loading="lazy" class="absolute top-0 left-0 w-full h-full object-cover transition-transform transform hover:scale-110">
+    ${competition.inscripcion_abierta ? '<span class="gr-competition-badge absolute top-2 right-2 bg-indigo-600 text-white py-1 px-2 rounded-md text-xs uppercase">Inscripción abierta</span>' : ''}
+  </div>
+  <div class="gr-competition-info p-4">
+    <h3 class="gr-competition-name text-xl font-semibold">${competition.nombre}</h3>
+    <p class="gr-competition-date text-gray-600">${formattedDate}</p>
+    <p class="gr-competition-location text-gray-600">${competition.ubicacion}</p>
+    ${competition.descripcion ? `<p class="gr-competition-description text-gray-700">${competition.descripcion}</p>` : ''}
+  </div>
+</a>
+</div>
+`;
+});
+
+competitionsGrid.innerHTML = competitionsHTML;
+competitionsGrid.style.display = 'grid';
+}
+});
+</script>
+
+<style>
+.gr-competitions-section {
+margin: 40px 0;
+}
+
+.gr-section-title {
+text-align: center;
+margin-bottom: 10px;
+color: {{ settings.gr_color_principal }};
+}
+
+.gr-section-description {
+text-align: center;
+margin-bottom: 30px;
+max-width: 800px;
+margin-left: auto;
+margin-right: auto;
+}
+
+.gr-competitions-loading {
+text-align: center;
+padding: 20px;
+}
+
+.gr-competitions-grid {
+display: grid;
+grid-template-columns: 1fr;
+gap: 20px;
+}
+
+@media screen and (min-width: 750px) {
+.gr-competitions-grid {
+grid-template-columns: repeat({{ section.settings.columns_desktop }}, 1fr);
+}
+}
+
+.gr-competition-card {
+border: 1px solid #e5e5e5;
+border-radius: 8px;
+overflow: hidden;
+transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.gr-competition-card:hover {
+transform: translateY(-5px);
+box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.gr-competition-image {
+position: relative;
+width: 100%;
+padding-top: 56.25%; /* 16:9 aspect ratio */
+overflow: hidden;
+}
+
+.gr-competition-image img {
+position: absolute;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+object-fit: cover;
+transition: transform 0.3s ease;
+}
+
+.gr-competition-card:hover .gr-competition-image img {
+transform: scale(1.05);
+}
+
+.gr-competition-badge {
+position: absolute;
+top: 10px;
+right: 10px;
+background-color: {{ settings.gr_color_principal }};
+color: white;
+padding: 5px 10px;
+border-radius: 4px;
+font-size: 0.8em;
+text-transform: uppercase;
+}
+
+.gr-competition-info {
+padding: 15px;
+}
+
+.gr-competition-name {
+margin: 0 0 5px;
+font-size: 1.2em;
+}
+</style>
+
+{% schema %}
+{
+"name": "GR Competiciones",
+"tag": "section",
+"class": "section",
+"settings": [
+{
+"type": "text",
+"id": "title",
+"label": "Título",
+"default": "Competiciones de Skate"
+},
+{
+"type": "textarea",
+"id": "description",
+"label": "Descripción",
+"default": "Descubre las próximas competiciones de skateboarding"
+},
+{
+"type": "range",
+"id": "columns_desktop",
+"min": 1,
+"max": 4,
+"step": 1,
+"default": 3,
+"label": "Columnas en escritorio"
+}
+],
+"blocks": [
+{
+"name": "Competición",
+"type": "competition",
+"settings": [
+{
+"type": "text",
+"id": "nombre",
+"label": "Nombre",
+"default": "Nombre de la competición"
+},
+{
+"type": "text",
+"id": "fecha",
+"label": "Fecha"
+},
+{
+"type": "text",
+"id": "ubicacion",
+"label": "Ubicación",
+"default": "Madrid, España"
+},
+{
+"type": "textarea",
+"id": "descripcion",
+"label": "Descripción",
+"default": "Breve descripción de la competición"
+},
+{
+"type": "image_picker",
+"id": "imagen",
+"label": "Imagen"
+},
+{
+"type": "checkbox",
+"id": "inscripcion_abierta",
+"label": "Inscripción Abierta",
+"default": false
+}
+]
+}
+],
+"presets": [
+{
+"name": "GR Competiciones",
+"blocks": [
+{
+"type": "competition"
+},
+{
+"type": "competition"
+},
+{
+"type": "competition"
+}
+]
+}
+]
+}
+{% endschema %}

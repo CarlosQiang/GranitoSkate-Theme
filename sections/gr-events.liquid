@@ -1,0 +1,175 @@
+{% comment %}
+  Sección de eventos
+{% endcomment %}
+
+<div class="gr-events-section" id="gr-events-container">
+  <div class="page-width">
+    {% if section.settings.title != blank %}
+      <h2 class="gr-section-title">{{ section.settings.title }}</h2>
+    {% endif %}
+    
+    <div class="gr-events-loading">Cargando eventos...</div>
+    
+    <div class="gr-events-empty" style="display: none;">
+      <p>No hay eventos próximos.</p>
+    </div>
+    
+    <div class="gr-events-list" style="display: none;">
+      <!-- Los eventos se cargarán aquí dinámicamente -->
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    if (window.granitoAPI) {
+      const eventsContainer = document.getElementById('gr-events-container');
+      const loadingElement = eventsContainer.querySelector('.gr-events-loading');
+      const emptyElement = eventsContainer.querySelector('.gr-events-empty');
+      const eventsList = eventsContainer.querySelector('.gr-events-list');
+      
+      window.granitoAPI.getEvents(true) // Solo eventos activos
+        .then(response => {
+          loadingElement.style.display = 'none';
+          
+          if (response.error) {
+            emptyElement.innerHTML = `<p>Error al cargar los eventos.</p>`;
+            emptyElement.style.display = 'block';
+            return;
+          }
+          
+          if (response.length === 0) {
+            emptyElement.style.display = 'block';
+            return;
+          }
+          
+          // Ordenar eventos por fecha
+          const events = response.sort((a, b) => {
+            return new Date(a.fecha_inicio) - new Date(b.fecha_inicio);
+          });
+          
+          // Crear HTML para cada evento
+          let eventsHTML = '';
+          
+          events.forEach(event => {
+            const startDate = new Date(event.fecha_inicio);
+            const endDate = new Date(event.fecha_fin);
+            
+            eventsHTML += `
+              <div class="gr-event-card">
+                <div class="gr-event-date">
+                  <div class="gr-event-day">${startDate.getDate()}</div>
+                  <div class="gr-event-month">${startDate.toLocaleString('default', { month: 'short' })}</div>
+                </div>
+                
+                <div class="gr-event-details">
+                  <h3 class="gr-event-title">${event.titulo}</h3>
+                  
+                  ${event.descripcion ? `<div class="gr-event-description">${event.descripcion}</div>` : ''}
+                  
+                  <div class="gr-event-time">
+                    ${startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - 
+                    ${endDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </div>
+                </div>
+              </div>
+            `;
+          });
+          
+          eventsList.innerHTML = eventsHTML;
+          eventsList.style.display = 'block';
+        });
+    }
+  });
+</script>
+
+<style>
+  .gr-events-section {
+    margin: 40px 0;
+  }
+  
+  .gr-section-title {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  
+  .gr-events-loading,
+  .gr-events-empty {
+    text-align: center;
+    padding: 20px;
+  }
+  
+  .gr-events-list {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  .gr-event-card {
+    display: flex;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 15px;
+  }
+  
+  .gr-event-date {
+    background-color: {{ settings.gr_color_principal }};
+    color: white;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 70px;
+  }
+  
+  .gr-event-day {
+    font-size: 1.5em;
+    font-weight: bold;
+  }
+  
+  .gr-event-month {
+    text-transform: uppercase;
+  }
+  
+  .gr-event-details {
+    padding: 15px;
+    flex-grow: 1;
+  }
+  
+  .gr-event-title {
+    margin-top: 0;
+    margin-bottom: 5px;
+  }
+  
+  .gr-event-description {
+    margin-bottom: 10px;
+    font-size: 0.9em;
+  }
+  
+  .gr-event-time {
+    font-size: 0.8em;
+    color: #777;
+  }
+</style>
+
+{% schema %}
+{
+  "name": "GR Eventos",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Título de la sección",
+      "default": "Próximos Eventos"
+    }
+  ],
+  "presets": [
+    {
+      "name": "GR Eventos"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,831 @@
+{% comment %}
+  @name: GR Header
+  @description: Header personalizable con colores de marca
+  @author: v0
+{% endcomment %}
+
+<div class="gr-header" data-section-id="{{ section.id }}">
+  <div class="page-width">
+    <div class="header-wrapper">
+      <div class="header-left">
+        {% if section.settings.show_menu_mobile %}
+          <button type="button" class="mobile-menu-toggle" aria-expanded="false" aria-controls="mobile-menu">
+            <span class="mobile-menu-icon">
+              <span></span>
+              <span></span>
+              <span></span>
+            </span>
+            <span class="visually-hidden">Menú</span>
+          </button>
+        {% endif %}
+        
+        {% if section.settings.show_search %}
+          <button type="button" class="header-search-toggle" aria-expanded="false" aria-controls="header-search">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M21 21L16.65 16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        {% endif %}
+      </div>
+      
+      <div class="header-center">
+        <div class="header-logo">
+          {% if section.settings.logo != blank %}
+            <a href="/" class="header-logo-link">
+              <img 
+                src="{{ section.settings.logo | img_url: 'master' }}" 
+                alt="{{ shop.name }}" 
+                width="{{ section.settings.logo_width }}" 
+                height="auto" 
+                loading="eager"
+                class="header-logo-image"
+              >
+            </a>
+          {% else %}
+            <a href="/" class="header-logo-text">{{ shop.name }}</a>
+          {% endif %}
+        </div>
+      </div>
+      
+      <div class="header-right">
+        <nav class="header-nav" role="navigation">
+          <ul class="header-menu">
+            {% for link in section.settings.menu.links %}
+              {% assign has_dropdown = false %}
+              {% if link.links.size > 0 %}
+                {% assign has_dropdown = true %}
+              {% endif %}
+              
+              <li class="header-menu-item {% if has_dropdown %}has-dropdown{% endif %}">
+                <a href="{{ link.url }}" class="header-menu-link {% if link.active %}active{% endif %}">
+                  {{ link.title }}
+                  {% if has_dropdown %}
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="dropdown-icon">
+                      <path d="M6 9L12 15L18 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  {% endif %}
+                </a>
+                
+                {% if has_dropdown %}
+                  <ul class="dropdown-menu">
+                    {% for childlink in link.links %}
+                      <li class="dropdown-menu-item">
+                        <a href="{{ childlink.url }}" class="dropdown-menu-link {% if childlink.active %}active{% endif %}">
+                          {{ childlink.title }}
+                        </a>
+                      </li>
+                    {% endfor %}
+                  </ul>
+                {% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        </nav>
+        
+        <div class="header-actions">
+          {% if shop.customer_accounts_enabled %}
+            <a href="/account" class="header-action-link">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M12 11C14.2091 11 16 9.20914 16 7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7C8 9.20914 9.79086 11 12 11Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <span class="visually-hidden">Cuenta</span>
+            </a>
+          {% endif %}
+          
+          <a href="/cart" class="header-action-link cart-link">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M9 22C9.55228 22 10 21.5523 10 21C10 20.4477 9.55228 20 9 20C8.44772 20 8 20.4477 8 21C8 21.5523 8.44772 22 9 22Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M20 22C20.5523 22 21 21.5523 21 21C21 20.4477 20.5523 20 20 20C19.4477 20 19 20.4477 19 21C19 21.5523 19.4477 22 20 22Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M1 1H5L7.68 14.39C7.77144 14.8504 8.02191 15.264 8.38755 15.5583C8.75318 15.8526 9.2107 16.009 9.68 16H19.4C19.8693 16.009 20.3268 15.8526 20.6925 15.5583C21.0581 15.264 21.3086 14.8504 21.4 14.39L23 6H6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="cart-count" data-cart-count>{{ cart.item_count }}</span>
+            <span class="visually-hidden">Carrito</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  {% if section.settings.show_search %}
+    <div id="header-search" class="header-search" hidden>
+      <div class="page-width">
+        <form action="/search" method="get" role="search" class="search-form">
+          <div class="search-input-wrapper">
+            <input 
+              type="search" 
+              name="q" 
+              id="search-input" 
+              class="search-input" 
+              placeholder="Buscar productos..." 
+              aria-label="Buscar productos"
+            >
+            <button type="submit" class="search-submit">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M21 21L16.65 16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <span class="visually-hidden">Buscar</span>
+            </button>
+          </div>
+          <button type="button" class="search-close" aria-controls="header-search">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="visually-hidden">Cerrar</span>
+          </button>
+        </form>
+      </div>
+    </div>
+  {% endif %}
+  
+  <div id="mobile-menu" class="mobile-menu" hidden>
+    <div class="mobile-menu-header">
+      <button type="button" class="mobile-menu-close" aria-controls="mobile-menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="visually-hidden">Cerrar</span>
+      </button>
+    </div>
+    
+    <nav class="mobile-nav" role="navigation">
+      <ul class="mobile-menu-list">
+        {% for link in section.settings.menu.links %}
+          {% assign has_dropdown = false %}
+          {% if link.links.size > 0 %}
+            {% assign has_dropdown = true %}
+          {% endif %}
+          
+          <li class="mobile-menu-item {% if has_dropdown %}has-submenu{% endif %}">
+            {% if has_dropdown %}
+              <button type="button" class="mobile-menu-toggle-submenu" aria-expanded="false">
+                {{ link.title }}
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="mobile-dropdown-icon">
+                  <path d="M12 5V19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+              <ul class="mobile-submenu" hidden>
+                <li class="mobile-submenu-item mobile-submenu-parent">
+                  <a href="{{ link.url }}" class="mobile-menu-link {% if link.active %}active{% endif %}">
+                    {{ link.title }}
+                  </a>
+                </li>
+                {% for childlink in link.links %}
+                  <li class="mobile-submenu-item">
+                    <a href="{{ childlink.url }}" class="mobile-menu-link {% if childlink.active %}active{% endif %}">
+                      {{ childlink.title }}
+                    </a>
+                  </li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <a href="{{ link.url }}" class="mobile-menu-link {% if link.active %}active{% endif %}">
+                {{ link.title }}
+              </a>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    </nav>
+  </div>
+</div>
+
+<style>
+  .gr-header {
+    position: relative;
+    background-color: {{ section.settings.background_color }};
+    color: {{ section.settings.text_color }};
+    padding: {{ section.settings.padding_vertical }}px 0;
+    z-index: 10;
+    {% if section.settings.sticky_header %}
+      position: sticky;
+      top: 0;
+      transition: transform 0.3s ease;
+    {% endif %}
+    {% if section.settings.show_border %}
+      border-bottom: 1px solid {{ section.settings.border_color }};
+    {% endif %}
+  }
+  
+  .header-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .header-left,
+  .header-right {
+    display: flex;
+    align-items: center;
+    flex: 1;
+  }
+  
+  .header-right {
+    justify-content: flex-end;
+  }
+  
+  .header-center {
+    text-align: center;
+    padding: 0 20px;
+  }
+  
+  .header-logo-link {
+    display: block;
+  }
+  
+  .header-logo-image {
+    max-width: 100%;
+    height: auto;
+    max-height: {{ section.settings.logo_max_height }}px;
+  }
+  
+  .header-logo-text {
+    font-size: 24px;
+    font-weight: bold;
+    color: {{ section.settings.text_color }};
+    text-decoration: none;
+  }
+  
+  .header-nav {
+    display: none;
+  }
+  
+  @media screen and (min-width: 990px) {
+    .header-nav {
+      display: block;
+    }
+    
+    .mobile-menu-toggle {
+      display: none;
+    }
+  }
+  
+  .header-menu {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .header-menu-item {
+    position: relative;
+    margin: 0 {{ section.settings.menu_item_spacing }}px;
+  }
+  
+  .header-menu-link {
+    display: flex;
+    align-items: center;
+    color: {{ section.settings.text_color }};
+    text-decoration: none;
+    padding: 5px 0;
+    font-weight: {{ section.settings.menu_font_weight }};
+    font-size: {{ section.settings.menu_font_size }}px;
+    transition: color 0.2s ease;
+  }
+  
+  .header-menu-link:hover {
+    color: {{ section.settings.text_hover_color }};
+  }
+  
+  .header-menu-link.active {
+    color: {{ section.settings.text_active_color }};
+    font-weight: 600;
+  }
+  
+  .dropdown-icon {
+    margin-left: 5px;
+    transition: transform 0.2s ease;
+  }
+  
+  .has-dropdown:hover .dropdown-icon {
+    transform: rotate(180deg);
+  }
+  
+  .dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: {{ section.settings.dropdown_background_color }};
+    min-width: 200px;
+    padding: 10px 0;
+    list-style: none;
+    margin: 0;
+    display: none;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    z-index: 5;
+    border-radius: 4px;
+  }
+  
+  .has-dropdown:hover .dropdown-menu {
+    display: block;
+  }
+  
+  .dropdown-menu-link {
+    display: block;
+    padding: 8px 15px;
+    color: {{ section.settings.dropdown_text_color }};
+    text-decoration: none;
+    font-size: {{ section.settings.menu_font_size | minus: 1 }}px;
+    transition: background-color 0.2s ease;
+  }
+  
+  .dropdown-menu-link:hover {
+    background-color: {{ section.settings.dropdown_hover_color }};
+  }
+  
+  .dropdown-menu-link.active {
+    font-weight: 600;
+    color: {{ section.settings.text_active_color }};
+  }
+  
+  .header-actions {
+    display: flex;
+    align-items: center;
+  }
+  
+  .header-action-link {
+    position: relative;
+    margin-left: 15px;
+    color: {{ section.settings.text_color }};
+    transition: color 0.2s ease;
+  }
+  
+  .header-action-link:hover {
+    color: {{ section.settings.text_hover_color }};
+  }
+  
+  .cart-count {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background-color: {{ section.settings.accent_color }};
+    color: #fff;
+    font-size: 10px;
+    font-weight: bold;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .header-search {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: {{ section.settings.background_color }};
+    padding: 15px 0;
+    border-top: 1px solid {{ section.settings.border_color }};
+    z-index: 5;
+  }
+  
+  .search-form {
+    display: flex;
+    align-items: center;
+  }
+  
+  .search-input-wrapper {
+    position: relative;
+    flex-grow: 1;
+  }
+  
+  .search-input {
+    width: 100%;
+    padding: 10px 40px 10px 15px;
+    border: 1px solid {{ section.settings.border_color }};
+    border-radius: 4px;
+    font-size: 16px;
+  }
+  
+  .search-submit {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: {{ section.settings.text_color }};
+  }
+  
+  .search-close {
+    margin-left: 15px;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: {{ section.settings.text_color }};
+  }
+  
+  .mobile-menu-toggle,
+  .header-search-toggle {
+    background: none;
+    border: none;
+    padding: 5px;
+    cursor: pointer;
+    color: {{ section.settings.text_color }};
+    margin-right: 10px;
+  }
+  
+  .mobile-menu-icon {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 20px;
+    height: 16px;
+  }
+  
+  .mobile-menu-icon span {
+    display: block;
+    width: 100%;
+    height: 2px;
+    background-color: {{ section.settings.text_color }};
+    transition: transform 0.3s ease;
+  }
+  
+  .mobile-menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 300px;
+    max-width: 80vw;
+    height: 100vh;
+    background-color: {{ section.settings.mobile_menu_background_color }};
+    color: {{ section.settings.mobile_menu_text_color }};
+    z-index: 100;
+    overflow-y: auto;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+  
+  .mobile-menu[hidden] {
+    display: block;
+    visibility: visible;
+    transform: translateX(-100%);
+  }
+  
+  .mobile-menu:not([hidden]) {
+    transform: translateX(0);
+  }
+  
+  .mobile-menu-header {
+    display: flex;
+    justify-content: flex-end;
+    padding: 15px;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+  }
+  
+  .mobile-menu-close {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: {{ section.settings.mobile_menu_text_color }};
+  }
+  
+  .mobile-menu-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .mobile-menu-item {
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+  }
+  
+  .mobile-menu-link {
+    display: block;
+    padding: 15px;
+    color: {{ section.settings.mobile_menu_text_color }};
+    text-decoration: none;
+  }
+  
+  .mobile-menu-toggle-submenu {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 15px;
+    background: none;
+    border: none;
+    text-align: left;
+    color: {{ section.settings.mobile_menu_text_color }};
+    font-size: inherit;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  
+  .mobile-dropdown-icon {
+    transition: transform 0.2s ease;
+  }
+  
+  .mobile-menu-toggle-submenu[aria-expanded="true"] .mobile-dropdown-icon {
+    transform: rotate(45deg);
+  }
+  
+  .mobile-submenu {
+    list-style: none;
+    margin: 0;
+    padding: 0 0 0 15px;
+    background-color: rgba(0,0,0,0.03);
+  }
+  
+  .mobile-submenu-parent {
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+  }
+  
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Mobile menu toggle
+    const menuToggleBtn = document.querySelector('.mobile-menu-toggle');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const mobileMenuClose = document.querySelector('.mobile-menu-close');
+    
+    if (menuToggleBtn && mobileMenu) {
+      menuToggleBtn.addEventListener('click', function() {
+        const isExpanded = this.getAttribute('aria-expanded') === 'true';
+        this.setAttribute('aria-expanded', !isExpanded);
+        mobileMenu.hidden = isExpanded;
+        
+        if (!isExpanded) {
+          document.body.style.overflow = 'hidden';
+        } else {
+          document.body.style.overflow = '';
+        }
+      });
+      
+      mobileMenuClose.addEventListener('click', function() {
+        menuToggleBtn.setAttribute('aria-expanded', 'false');
+        mobileMenu.hidden = true;
+        document.body.style.overflow = '';
+      });
+    }
+    
+    // Mobile dropdown toggles
+    const mobileDropdownToggles = document.querySelectorAll('.mobile-menu-toggle-submenu');
+    
+    mobileDropdownToggles.forEach(toggle => {
+      toggle.addEventListener('click', function() {
+        const isExpanded = this.getAttribute('aria-expanded') === 'true';
+        this.setAttribute('aria-expanded', !isExpanded);
+        
+        const submenu = this.nextElementSibling;
+        submenu.hidden = isExpanded;
+      });
+    });
+    
+    // Search toggle
+    const searchToggle = document.querySelector('.header-search-toggle');
+    const searchContainer = document.getElementById('header-search');
+    const searchClose = document.querySelector('.search-close');
+    
+    if (searchToggle && searchContainer) {
+      searchToggle.addEventListener('click', function() {
+        const isExpanded = this.getAttribute('aria-expanded') === 'true';
+        this.setAttribute('aria-expanded', !isExpanded);
+        searchContainer.hidden = isExpanded;
+        
+        if (!isExpanded) {
+          document.getElementById('search-input').focus();
+        }
+      });
+      
+      searchClose.addEventListener('click', function() {
+        searchToggle.setAttribute('aria-expanded', 'false');
+        searchContainer.hidden = true;
+      });
+    }
+    
+    // Sticky header behavior
+    {% if section.settings.sticky_header and section.settings.hide_on_scroll %}
+      let lastScrollTop = 0;
+      const header = document.querySelector('.gr-header');
+      
+      window.addEventListener('scroll', function() {
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        
+        if (scrollTop > lastScrollTop && scrollTop > 200) {
+          // Scrolling down & past header
+          header.style.transform = 'translateY(-100%)';
+        } else {
+          // Scrolling up
+          header.style.transform = 'translateY(0)';
+        }
+        
+        lastScrollTop = scrollTop;
+      });
+    {% endif %}
+  });
+</script>
+
+{% schema %}
+{
+  "name": "GR Header",
+  "settings": [
+    {
+      "type": "image_picker",
+      "id": "logo",
+      "label": "Logo"
+    },
+    {
+      "type": "range",
+      "id": "logo_width",
+      "min": 50,
+      "max": 300,
+      "step": 10,
+      "default": 100,
+      "unit": "px",
+      "label": "Ancho del logo"
+    },
+    {
+      "type": "range",
+      "id": "logo_max_height",
+      "min": 30,
+      "max": 100,
+      "step": 5,
+      "default": 50,
+      "unit": "px",
+      "label": "Altura máxima del logo"
+    },
+    {
+      "type": "link_list",
+      "id": "menu",
+      "label": "Menú",
+      "default": "main-menu"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Color de fondo",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Color de texto",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "text_hover_color",
+      "label": "Color de texto al pasar el cursor",
+      "default": "#d29a43"
+    },
+    {
+      "type": "color",
+      "id": "text_active_color",
+      "label": "Color de texto activo",
+      "default": "#d29a43"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Color de acento",
+      "default": "#d29a43"
+    },
+    {
+      "type": "color",
+      "id": "border_color",
+      "label": "Color de borde",
+      "default": "#e6e6e6"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_border",
+      "label": "Mostrar borde inferior",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "padding_vertical",
+      "min": 5,
+      "max": 30,
+      "step": 5,
+      "default": 15,
+      "label": "Relleno vertical"
+    },
+    {
+      "type": "range",
+      "id": "menu_font_size",
+      "min": 12,
+      "max": 18,
+      "step": 1,
+      "default": 14,
+      "label": "Tamaño de fuente del menú"
+    },
+    {
+      "type": "select",
+      "id": "menu_font_weight",
+      "label": "Grosor de fuente del menú",
+      "options": [
+        {
+          "value": "400",
+          "label": "Normal"
+        },
+        {
+          "value": "500",
+          "label": "Medio"
+        },
+        {
+          "value": "600",
+          "label": "Semi-negrita"
+        },
+        {
+          "value": "700",
+          "label": "Negrita"
+        }
+      ],
+      "default": "500"
+    },
+    {
+      "type": "range",
+      "id": "menu_item_spacing",
+      "min": 5,
+      "max": 30,
+      "step": 5,
+      "default": 15,
+      "label": "Espacio entre elementos del menú"
+    },
+    {
+      "type": "color",
+      "id": "dropdown_background_color",
+      "label": "Color de fondo del menú desplegable",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "dropdown_text_color",
+      "label": "Color de texto del menú desplegable",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "dropdown_hover_color",
+      "label": "Color de fondo al pasar el cursor",
+      "default": "#f5f5f5"
+    },
+    {
+      "type": "color",
+      "id": "mobile_menu_background_color",
+      "label": "Color de fondo del menú móvil",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "mobile_menu_text_color",
+      "label": "Color de texto del menú móvil",
+      "default": "#000000"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_search",
+      "label": "Mostrar búsqueda",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_menu_mobile",
+      "label": "Mostrar menú móvil",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "sticky_header",
+      "label": "Encabezado fijo",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "hide_on_scroll",
+      "label": "Ocultar al desplazarse hacia abajo",
+      "default": true
+    }
+  ],
+  "presets": [
+    {
+      "name": "GR Header",
+      "category": "Header"
+    }
+  ]
+}
+{% endschema %}

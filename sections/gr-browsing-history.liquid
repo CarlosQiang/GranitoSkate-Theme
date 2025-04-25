@@ -1,0 +1,78 @@
+{% assign api_url = settings.api_base_url | append: "/user/browsing-history" %}
+
+<div class="gr-browsing-history-section" data-api-url="{{ api_url }}">
+  <div class="container">
+    <h2 class="section-title">{{ section.settings.title }}</h2>
+    
+    <div class="gr-browsing-history-grid" id="browsingHistoryGrid">
+      <div class="gr-loading">
+        <div class="gr-spinner"></div>
+        <p>Cargando historial...</p>
+      </div>
+    </div>
+    
+    <div class="gr-browsing-history-empty" id="browsingHistoryEmpty" style="display: none;">
+      <p>{{ section.settings.empty_text }}</p>
+      <a href="/collections/all" class="gr-button">{{ section.settings.browse_text }}</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const container = document.querySelector('.gr-browsing-history-section');
+    const apiUrl = container.dataset.apiUrl;
+    const grid = document.getElementById('browsingHistoryGrid');
+    const emptyMessage = document.getElementById('browsingHistoryEmpty');
+    
+    // Función para cargar historial de navegación
+    async function loadBrowsingHistory() {
+      try {
+        const response = await fetch(apiUrl, {
+          headers: {
+            'Authorization': `Bearer ${window.granitoApi.getToken()}`
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error('Error al cargar el historial de navegación');
+        }
+        
+        const data = await response.json();
+        
+        // Renderizar productos visitados
+        if (data.products.length === 0) {
+          grid.style.display = 'none';
+          emptyMessage.style.display = 'block';
+          return;
+        }
+        
+        grid.innerHTML = '';
+        emptyMessage.style.display = 'none';
+        
+        data.products.forEach(product => {
+          const productCard = document.createElement('div');
+          productCard.className = 'gr-product-card';
+          
+          // Verificar si el producto está en la lista de deseos
+          const isWishlisted = window.granitoApi.isProductWishlisted(product.id);
+          const wishlistClass = isWishlisted ? 'in-wishlist' : '';
+          
+          productCard.innerHTML = `
+            <div class="gr-product-image">
+              <a href="/products/${product.handle}">
+                <img src="${product.featured_image}" alt="${product.title}" loading="lazy">
+              </a>
+              <div class="gr-product-actions">
+                <button class="gr-wishlist-button ${wishlistClass}" data-product-id="${product.id}">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+                
+
+
+## 9. Notificaciones en tiempo real
+
+```plaintext file="sections/gr-notifications.liquid"
+... This file was left out for brevity. Assume it is correct and does not need any modifications. ...

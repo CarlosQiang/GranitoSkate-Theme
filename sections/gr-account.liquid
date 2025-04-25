@@ -1,0 +1,371 @@
+{% comment %}
+  Sección de cuenta personalizada para GranitoSkate
+{% endcomment %}
+
+<div class="gr-account-section" id="gr-account-container">
+  <div class="page-width">
+    <div class="gr-account-header">
+      <h1 class="gr-account-title">{{ section.settings.title }}</h1>
+      
+      {% if customer %}
+        <p class="gr-account-welcome">{{ section.settings.welcome_text | replace: '[name]', customer.first_name }}</p>
+      {% endif %}
+    </div>
+    
+    {% if customer %}
+      <div class="gr-account-nav">
+        <ul class="gr-account-nav-list">
+          <li class="gr-account-nav-item">
+            <a href="/account" class="gr-account-nav-link{% if request.path == '/account' %} active{% endif %}">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+              </svg>
+              {{ section.settings.dashboard_text }}
+            </a>
+          </li>
+          <li class="gr-account-nav-item">
+            <a href="/account/orders" class="gr-account-nav-link{% if request.path contains '/account/orders' %} active{% endif %}">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <path d="M16 10a4 4 0 0 1-8 0"></path>
+              </svg>
+              {{ section.settings.orders_text }}
+            </a>
+          </li>
+          <li class="gr-account-nav-item">
+            <a href="/account/addresses" class="gr-account-nav-link{% if request.path contains '/account/addresses' %} active{% endif %}">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+              {{ section.settings.addresses_text }}
+            </a>
+          </li>
+          {% if settings.gr_enable_wishlist %}
+            <li class="gr-account-nav-item">
+              <a href="/pages/wishlist" class="gr-account-nav-link{% if request.path contains '/pages/wishlist' %} active{% endif %}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                </svg>
+                {{ section.settings.wishlist_text }}
+              </a>
+            </li>
+          {% endif %}
+          {% if settings.gr_enable_messages %}
+            <li class="gr-account-nav-item">
+              <a href="/pages/messages" class="gr-account-nav-link{% if request.path contains '/pages/messages' %} active{% endif %}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+                {{ section.settings.messages_text }}
+              </a>
+            </li>
+          {% endif %}
+          {% if settings.gr_enable_build_skate %}
+            <li class="gr-account-nav-item">
+              <a href="/pages/build-skate" class="gr-account-nav-link{% if request.path contains '/pages/build-skate' %} active{% endif %}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
+                  <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
+                  <path d="M2 2l7.586 7.586"></path>
+                  <circle cx="11" cy="11" r="2"></circle>
+                </svg>
+                {{ section.settings.builds_text }}
+              </a>
+            </li>
+          {% endif %}
+          <li class="gr-account-nav-item">
+            <a href="{{ routes.account_logout_url }}" class="gr-account-nav-link">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                <polyline points="16 17 21 12 16 7"></polyline>
+                <line x1="21" y1="12" x2="9" y2="12"></line>
+              </svg>
+              {{ section.settings.logout_text }}
+            </a>
+          </li>
+        </ul>
+      </div>
+      
+      <div class="gr-account-content">
+        {{ content_for_layout }}
+      </div>
+    {% else %}
+      <div class="gr-account-login">
+        <div class="gr-account-login-container">
+          <h2>{{ section.settings.login_title }}</h2>
+          
+          {% form 'customer_login' %}
+            {% if form.errors %}
+              <div class="gr-form-error">
+                {{ form.errors | default_errors }}
+              </div>
+            {% endif %}
+            
+            <div class="gr-form-field">
+              <label for="customer_email">{{ section.settings.email_label }}</label>
+              <input type="email" name="customer[email]" id="customer_email" autocomplete="email" required>
+            </div>
+            
+            <div class="gr-form-field">
+              <label for="customer_password">{{ section.settings.password_label }}</label>
+              <input type="password" name="customer[password]" id="customer_password" autocomplete="current-password" required>
+            </div>
+            
+            <div class="gr-form-actions">
+              <button type="submit" class="gr-button">{{ section.settings.login_button }}</button>
+              <a href="{{ routes.account_register_url }}" class="gr-button gr-button-secondary">{{ section.settings.register_button }}</a>
+            </div>
+            
+            <div class="gr-form-links">
+              <a href="{{ routes.account_recover_url }}">{{ section.settings.forgot_password }}</a>
+            </div>
+          {% endform %}
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<style>
+  .gr-account-section {
+    margin: 40px 0;
+  }
+  
+  .gr-account-header {
+    margin-bottom: 30px;
+  }
+  
+  .gr-account-title {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: {{ settings.gr_color_principal }};
+  }
+  
+  .gr-account-welcome {
+    margin: 0;
+  }
+  
+  .gr-account-nav {
+    margin-bottom: 30px;
+  }
+  
+  .gr-account-nav-list {
+    display: flex;
+    flex-wrap: wrap;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    gap: 10px;
+  }
+  
+  .gr-account-nav-item {
+    margin: 0;
+  }
+  
+  .gr-account-nav-link {
+    display: flex;
+    align-items: center;
+    padding: 8px 15px;
+    border: 1px solid #e5e5e5;
+    border-radius: 4px;
+    text-decoration: none;
+    color: {{ section.settings.text_color }};
+    transition: all 0.2s ease;
+  }
+  
+  .gr-account-nav-link svg {
+    margin-right: 8px;
+  }
+  
+  .gr-account-nav-link:hover,
+  .gr-account-nav-link.active {
+    background-color: {{ settings.gr_color_principal }};
+    color: white;
+    border-color: {{ settings.gr_color_principal }};
+  }
+  
+  .gr-account-login-container {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 30px;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+  }
+  
+  .gr-account-login-container h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: {{ settings.gr_color_principal }};
+    text-align: center;
+  }
+  
+  .gr-form-field {
+    margin-bottom: 15px;
+  }
+  
+  .gr-form-field label {
+    display: block;
+    margin-bottom: 5px;
+  }
+  
+  .gr-form-field input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #e5e5e5;
+    border-radius: 4px;
+  }
+  
+  .gr-form-actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+  
+  .gr-form-actions button,
+  .gr-form-actions a {
+    flex: 1;
+  }
+  
+  .gr-form-links {
+    text-align: center;
+  }
+  
+  .gr-form-links a {
+    color: {{ settings.gr_color_principal }};
+    text-decoration: none;
+  }
+  
+  .gr-form-error {
+    color: #e53935;
+    margin-bottom: 15px;
+    padding: 10px;
+    background-color: #ffebee;
+    border-radius: 4px;
+  }
+</style>
+
+{% schema %}
+{
+  "name": "GR Cuenta",
+  "tag": "section",
+  "class": "section-account",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Configuración general"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Título",
+      "default": "Mi cuenta"
+    },
+    {
+      "type": "text",
+      "id": "welcome_text",
+      "label": "Texto de bienvenida",
+      "default": "Bienvenido/a, [name]"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Color del texto",
+      "default": "#333333"
+    },
+    {
+      "type": "header",
+      "content": "Navegación"
+    },
+    {
+      "type": "text",
+      "id": "dashboard_text",
+      "label": "Texto del panel",
+      "default": "Panel"
+    },
+    {
+      "type": "text",
+      "id": "orders_text",
+      "label": "Texto de pedidos",
+      "default": "Pedidos"
+    },
+    {
+      "type": "text",
+      "id": "addresses_text",
+      "label": "Texto de direcciones",
+      "default": "Direcciones"
+    },
+    {
+      "type": "text",
+      "id": "wishlist_text",
+      "label": "Texto de favoritos",
+      "default": "Favoritos"
+    },
+    {
+      "type": "text",
+      "id": "messages_text",
+      "label": "Texto de mensajes",
+      "default": "Mensajes"
+    },
+    {
+      "type": "text",
+      "id": "builds_text",
+      "label": "Texto de builds",
+      "default": "Mis builds"
+    },
+    {
+      "type": "text",
+      "id": "logout_text",
+      "label": "Texto de cerrar sesión",
+      "default": "Cerrar sesión"
+    },
+    {
+      "type": "header",
+      "content": "Inicio de sesión"
+    },
+    {
+      "type": "text",
+      "id": "login_title",
+      "label": "Título de inicio de sesión",
+      "default": "Iniciar sesión"
+    },
+    {
+      "type": "text",
+      "id": "email_label",
+      "label": "Etiqueta de email",
+      "default": "Email"
+    },
+    {
+      "type": "text",
+      "id": "password_label",
+      "label": "Etiqueta de contraseña",
+      "default": "Contraseña"
+    },
+    {
+      "type": "text",
+      "id": "login_button",
+      "label": "Texto del botón de inicio de sesión",
+      "default": "Iniciar sesión"
+    },
+    {
+      "type": "text",
+      "id": "register_button",
+      "label": "Texto del botón de registro",
+      "default": "Registrarse"
+    },
+    {
+      "type": "text",
+      "id": "forgot_password",
+      "label": "Texto de olvidé mi contraseña",
+      "default": "¿Olvidaste tu contraseña?"
+    }
+  ],
+  "presets": [
+    {
+      "name": "GR Cuenta"
+    }
+  ]
+}
+{% endschema %}

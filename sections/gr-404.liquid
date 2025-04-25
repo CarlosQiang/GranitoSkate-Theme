@@ -1,0 +1,48 @@
+{% comment %}
+  Sección de página 404
+{% endcomment %}
+
+<div class="gr-404-section py-12">
+  <div class="page-width">
+    <div class="gr-404-content text-center">
+      <h1 class="gr-404-title">Página no encontrada</h1>
+      <p class="gr-404-description">Lo sentimos, la página que estás buscando no existe.</p>
+      <a href="/" class="gr-button">Volver al inicio</a>
+    </div>
+  </div>
+</div>
+
+<style>
+  .gr-404-section {
+    margin: 40px 0;
+  }
+  
+  .gr-404-content {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  
+  .gr-404-title {
+    font-size: 2.5em;
+    margin-bottom: 20px;
+  }
+  
+  .gr-404-description {
+    font-size: 1.2em;
+    margin-bottom: 30px;
+  }
+</style>
+
+{% schema %}
+{
+  "name": "GR 404",
+  "tag": "section",
+  "class": "section",
+  "settings": [],
+  "presets": [
+    {
+      "name": "GR 404"
+    }
+  ]
+}
+{% endschema %}

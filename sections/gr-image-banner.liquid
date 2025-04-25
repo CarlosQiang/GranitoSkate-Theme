@@ -1,0 +1,628 @@
+{% comment %}
+  @name: GR Banner de Imagen
+  @description: Banner de imagen con título, subtítulo y botones
+  @author: v0
+{% endcomment %}
+
+<div class="gr-image-banner" data-section-id="{{ section.id }}">
+  <div class="banner-wrapper">
+    {% if section.settings.image != blank %}
+      <div class="banner-image-container">
+        <img
+          srcset="
+            {{ section.settings.image | img_url: '400x' }} 400w,
+            {{ section.settings.image | img_url: '600x' }} 600w,
+            {{ section.settings.image | img_url: '800x' }} 800w,
+            {{ section.settings.image | img_url: '1200x' }} 1200w,
+            {{ section.settings.image | img_url: '1600x' }} 1600w,
+            {{ section.settings.image | img_url: '2000x' }} 2000w
+          "
+          src="{{ section.settings.image | img_url: '1600x' }}"
+          sizes="100vw"
+          alt="{{ section.settings.image.alt | escape }}"
+          loading="eager"
+          width="{{ section.settings.image.width }}"
+          height="{{ section.settings.image.height }}"
+          class="banner-image"
+        >
+      </div>
+    {% else %}
+      <div class="banner-image-placeholder">
+        {{ 'lifestyle-1' | placeholder_svg_tag: 'placeholder-svg' }}
+      </div>
+    {% endif %}
+    
+    {% if section.settings.show_overlay %}
+      <div class="banner-overlay" style="background-color: {{ section.settings.overlay_color }}; opacity: {{ section.settings.overlay_opacity | divided_by: 100.0 }};"></div>
+    {% endif %}
+    
+    <div class="banner-content-container">
+      <div class="page-width">
+        <div class="banner-content banner-content--{{ section.settings.content_alignment }} banner-content--{{ section.settings.content_position }}">
+          {% for block in section.blocks %}
+            {% case block.type %}
+              {% when 'heading' %}
+                <h2 class="banner-heading" {{ block.shopify_attributes }}>
+                  {{ block.settings.heading | escape }}
+                </h2>
+              {% when 'text' %}
+                <div class="banner-text" {{ block.shopify_attributes }}>
+                  {{ block.settings.text }}
+                </div>
+              {% when 'buttons' %}
+                <div class="banner-buttons" {{ block.shopify_attributes }}>
+                  {% if block.settings.button_label_1 != blank %}
+                    <a href="{{ block.settings.button_link_1 }}" class="banner-button banner-button--{{ block.settings.button_style_1 }}">
+                      {{ block.settings.button_label_1 | escape }}
+                    </a>
+                  {% endif %}
+                  
+                  {% if block.settings.button_label_2 != blank %}
+                    <a href="{{ block.settings.button_link_2 }}" class="banner-button banner-button--{{ block.settings.button_style_2 }}">
+                      {{ block.settings.button_label_2 | escape }}
+                    </a>
+                  {% endif %}
+                </div>
+            {% endcase %}
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .gr-image-banner {
+    position: relative;
+    margin-bottom: {{ section.settings.margin_bottom }}px;
+  }
+  
+  .banner-wrapper {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .banner-image-container {
+    width: 100%;
+    height: {{ section.settings.height_mobile }}px;
+  }
+  
+  @media screen and (min-width: 750px) {
+    .banner-image-container {
+      height: {{ section.settings.height }}px;
+    }
+  }
+  
+  .banner-image {
+    width: 100%;
+    height: 100%;
+    object-fit: {{ section.settings.image_fit }};
+    object-position: {{ section.settings.focal_point }};
+  }
+  
+  .banner-image-placeholder {
+    width: 100%;
+    height: {{ section.settings.height_mobile }}px;
+    background-color: #f5f5f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  @media screen and (min-width: 750px) {
+    .banner-image-placeholder {
+      height: {{ section.settings.height }}px;
+    }
+  }
+  
+  .banner-image-placeholder .placeholder-svg {
+    width: 50%;
+    height: 50%;
+  }
+  
+  .banner-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+  
+  .banner-content-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+  }
+  
+  .banner-content {
+    max-width: {{ section.settings.content_width }}px;
+    padding: 20px;
+    color: {{ section.settings.text_color }};
+  }
+  
+  .banner-content--left {
+    text-align: left;
+    margin-right: auto;
+  }
+  
+  .banner-content--center {
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .banner-content--right {
+    text-align: right;
+    margin-left: auto;
+  }
+  
+  .banner-content--top {
+    align-self: flex-start;
+    padding-top: 40px;
+  }
+  
+  .banner-content--middle {
+    align-self: center;
+  }
+  
+  .banner-content--bottom {
+    align-self: flex-end;
+    padding-bottom: 40px;
+  }
+  
+  .banner-heading {
+    margin: 0 0 15px;
+    font-size: {{ section.settings.heading_size_mobile }}px;
+    font-weight: {{ section.settings.heading_weight }};
+    line-height: 1.2;
+    {% if section.settings.text_shadow %}
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    {% endif %}
+  }
+  
+  @media screen and (min-width: 750px) {
+    .banner-heading {
+      font-size: {{ section.settings.heading_size }}px;
+    }
+  }
+  
+  .banner-text {
+    margin-bottom: 20px;
+    font-size: {{ section.settings.text_size_mobile }}px;
+    line-height: 1.5;
+    {% if section.settings.text_shadow %}
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    {% endif %}
+  }
+  
+  @media screen and (min-width: 750px) {
+    .banner-text {
+      font-size: {{ section.settings.text_size }}px;
+    }
+  }
+  
+  .banner-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  
+  .banner-content--center .banner-buttons {
+    justify-content: center;
+  }
+  
+  .banner-content--right .banner-buttons {
+    justify-content: flex-end;
+  }
+  
+  .banner-button {
+    display: inline-block;
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+  }
+  
+  .banner-button--primary {
+    background-color: {{ section.settings.button_background_color }};
+    color: {{ section.settings.button_text_color }};
+    border: 1px solid {{ section.settings.button_background_color }};
+  }
+  
+  .banner-button--primary:hover {
+    background-color: {{ section.settings.button_background_hover_color }};
+    border-color: {{ section.settings.button_background_hover_color }};
+  }
+  
+  .banner-button--secondary {
+    background-color: transparent;
+    color: {{ section.settings.button_text_color }};
+    border: 1px solid {{ section.settings.button_text_color }};
+  }
+  
+  .banner-button--secondary:hover {
+    background-color: {{ section.settings.button_text_color }};
+    color: {{ section.settings.button_background_color }};
+  }
+</style>
+
+{% schema %}
+{
+  "name": "GR Banner de Imagen",
+  "settings": [
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Imagen"
+    },
+    {
+      "type": "range",
+      "id": "height",
+      "min": 200,
+      "max": 800,
+      "step": 50,
+      "unit": "px",
+      "label": "Altura del banner (escritorio)",
+      "default": 500
+    },
+    {
+      "type": "range",
+      "id": "height_mobile",
+      "min": 150,
+      "max": 600,
+      "step": 50,
+      "unit": "px",
+      "label": "Altura del banner (móvil)",
+      "default": 350
+    },
+    {
+      "type": "select",
+      "id": "image_fit",
+      "label": "Ajuste de imagen",
+      "options": [
+        {
+          "value": "cover",
+          "label": "Cubrir"
+        },
+        {
+          "value": "contain",
+          "label": "Contener"
+        }
+      ],
+      "default": "cover"
+    },
+    {
+      "type": "select",
+      "id": "focal_point",
+      "label": "Punto focal",
+      "options": [
+        {
+          "value": "center center",
+          "label": "Centro"
+        },
+        {
+          "value": "top center",
+          "label": "Superior"
+        },
+        {
+          "value": "bottom center",
+          "label": "Inferior"
+        },
+        {
+          "value": "center left",
+          "label": "Izquierda"
+        },
+        {
+          "value": "center right",
+          "label": "Derecha"
+        },
+        {
+          "value": "top left",
+          "label": "Superior izquierda"
+        },
+        {
+          "value": "top right",
+          "label": "Superior derecha"
+        },
+        {
+          "value": "bottom left",
+          "label": "Inferior izquierda"
+        },
+        {
+          "value": "bottom right",
+          "label": "Inferior derecha"
+        }
+      ],
+      "default": "center center"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_overlay",
+      "label": "Mostrar superposición",
+      "default": true
+    },
+    {
+      "type": "color",
+      "id": "overlay_color",
+      "label": "Color de superposición",
+      "default": "#000000"
+    },
+    {
+      "type": "range",
+      "id": "overlay_opacity",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "label": "Opacidad de superposición",
+      "default": 30
+    },
+    {
+      "type": "select",
+      "id": "content_position",
+      "label": "Posición vertical del contenido",
+      "options": [
+        {
+          "value": "top",
+          "label": "Superior"
+        },
+        {
+          "value": "middle",
+          "label": "Medio"
+        },
+        {
+          "value": "bottom",
+          "label": "Inferior"
+        }
+      ],
+      "default": "middle"
+    },
+    {
+      "type": "select",
+      "id": "content_alignment",
+      "label": "Alineación horizontal del contenido",
+      "options": [
+        {
+          "value": "left",
+          "label": "Izquierda"
+        },
+        {
+          "value": "center",
+          "label": "Centro"
+        },
+        {
+          "value": "right",
+          "label": "Derecha"
+        }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "range",
+      "id": "content_width",
+      "min": 300,
+      "max": 1000,
+      "step": 50,
+      "unit": "px",
+      "label": "Ancho máximo del contenido",
+      "default": 600
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Color de texto",
+      "default": "#ffffff"
+    },
+    {
+      "type": "checkbox",
+      "id": "text_shadow",
+      "label": "Aplicar sombra al texto",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "heading_size",
+      "min": 24,
+      "max": 72,
+      "step": 2,
+      "unit": "px",
+      "label": "Tamaño de título (escritorio)",
+      "default": 48
+    },
+    {
+      "type": "range",
+      "id": "heading_size_mobile",
+      "min": 20,
+      "max": 48,
+      "step": 2,
+      "unit": "px",
+      "label": "Tamaño de título (móvil)",
+      "default": 32
+    },
+    {
+      "type": "select",
+      "id": "heading_weight",
+      "label": "Grosor de título",
+      "options": [
+        {
+          "value": "400",
+          "label": "Normal"
+        },
+        {
+          "value": "500",
+          "label": "Medio"
+        },
+        {
+          "value": "600",
+          "label": "Semi-negrita"
+        },
+        {
+          "value": "700",
+          "label": "Negrita"
+        }
+      ],
+      "default": "700"
+    },
+    {
+      "type": "range",
+      "id": "text_size",
+      "min": 14,
+      "max": 28,
+      "step": 2,
+      "unit": "px",
+      "label": "Tamaño de texto (escritorio)",
+      "default": 18
+    },
+    {
+      "type": "range",
+      "id": "text_size_mobile",
+      "min": 12,
+      "max": 22,
+      "step": 2,
+      "unit": "px",
+      "label": "Tamaño de texto (móvil)",
+      "default": 16
+    },
+    {
+      "type": "color",
+      "id": "button_background_color",
+      "label": "Color de fondo del botón",
+      "default": "#d29a43"
+    },
+    {
+      "type": "color",
+      "id": "button_text_color",
+      "label": "Color de texto del botón",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "button_background_hover_color",
+      "label": "Color de fondo del botón al pasar el cursor",
+      "default": "#b88536"
+    },
+    {
+      "type": "range",
+      "id": "margin_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 10,
+      "unit": "px",
+      "label": "Margen inferior",
+      "default": 0
+    }
+  ],
+  "blocks": [
+    {
+      "type": "heading",
+      "name": "Título",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "default": "Título del banner",
+          "label": "Título"
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "name": "Texto",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "richtext",
+          "id": "text",
+          "default": "<p>Añade una descripción o subtítulo para complementar el título del banner</p>",
+          "label": "Texto"
+        }
+      ]
+    },
+    {
+      "type": "buttons",
+      "name": "Botones",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "button_label_1",
+          "default": "Botón primario",
+          "label": "Etiqueta del primer botón"
+        },
+        {
+          "type": "url",
+          "id": "button_link_1",
+          "label": "Enlace del primer botón"
+        },
+        {
+          "type": "select",
+          "id": "button_style_1",
+          "label": "Estilo del primer botón",
+          "options": [
+            {
+              "value": "primary",
+              "label": "Primario"
+            },
+            {
+              "value": "secondary",
+              "label": "Secundario"
+            }
+          ],
+          "default": "primary"
+        },
+        {
+          "type": "text",
+          "id": "button_label_2",
+          "default": "Botón secundario",
+          "label": "Etiqueta del segundo botón"
+        },
+        {
+          "type": "url",
+          "id": "button_link_2",
+          "label": "Enlace del segundo botón"
+        },
+        {
+          "type": "select",
+          "id": "button_style_2",
+          "label": "Estilo del segundo botón",
+          "options": [
+            {
+              "value": "primary",
+              "label": "Primario"
+            },
+            {
+              "value": "secondary",
+              "label": "Secundario"
+            }
+          ],
+          "default": "secondary"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "GR Banner de Imagen",
+      "blocks": [
+        {
+          "type": "heading"
+        },
+        {
+          "type": "text"
+        },
+        {
+          "type": "buttons"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

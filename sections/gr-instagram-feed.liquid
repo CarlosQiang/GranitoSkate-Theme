@@ -1,0 +1,280 @@
+{% comment %}
+  Sección de feed de Instagram
+{% endcomment %}
+
+<div class="gr-instagram-section" id="gr-instagram-container">
+  <div class="page-width">
+    {% if section.settings.title != blank %}
+      <h2 class="gr-section-title">{{ section.settings.title }}</h2>
+    {% endif %}
+    
+    {% if section.settings.description != blank %}
+      <div class="gr-section-description">{{ section.settings.description }}</div>
+    {% endif %}
+    
+    <div class="gr-instagram-grid">
+      {% for block in section.blocks %}
+        <div class="gr-instagram-item" {{ block.shopify_attributes }}>
+          <a href="{{ block.settings.link }}" target="_blank" rel="noopener" class="gr-instagram-link">
+            <div class="gr-instagram-image">
+              {% if block.settings.image != blank %}
+                <img src="{{ block.settings.image | img_url: 'master' }}" alt="{{ block.settings.caption }}" loading="lazy">
+              {% else %}
+                <img src="{{ 'placeholder.svg' | asset_url }}" alt="{{ block.settings.caption }}" loading="lazy">
+              {% endif %}
+            </div>
+            <div class="gr-instagram-overlay">
+              <div class="gr-instagram-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                  <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                </svg>
+              </div>
+              {% if block.settings.show_caption and block.settings.caption != blank %}
+                <div class="gr-instagram-caption">{{ block.settings.caption }}</div>
+              {% endif %}
+            </div>
+          </a>
+        </div>
+      {% endfor %}
+    </div>
+    
+    {% if section.settings.show_follow_link and section.settings.instagram_url != blank %}
+      <div class="gr-instagram-follow">
+        <a href="{{ section.settings.instagram_url }}" target="_blank" rel="noopener" class="gr-instagram-follow-link">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+          </svg>
+          {{ section.settings.follow_text }}
+        </a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<style>
+  .gr-instagram-section {
+    margin: 40px 0;
+  }
+  
+  .gr-section-title {
+    text-align: center;
+    margin-bottom: 10px;
+    color: {{ settings.gr_color_principal }};
+  }
+  
+  .gr-section-description {
+    text-align: center;
+    margin-bottom: 30px;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .gr-instagram-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  
+  @media screen and (min-width: 750px) {
+    .gr-instagram-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+  
+  @media screen and (min-width: 990px) {
+    .gr-instagram-grid {
+      grid-template-columns: repeat({{ section.settings.columns_desktop }}, 1fr);
+    }
+  }
+  
+  .gr-instagram-item {
+    position: relative;
+    overflow: hidden;
+    padding-bottom: 100%;
+  }
+  
+  .gr-instagram-link {
+    display: block;
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+  
+  .gr-instagram-image {
+    height: 100%;
+    width: 100%;
+  }
+  
+  .gr-instagram-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+  
+  .gr-instagram-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    color: white;
+    padding: 15px;
+    text-align: center;
+  }
+  
+  .gr-instagram-item:hover .gr-instagram-overlay {
+    opacity: 1;
+  }
+  
+  .gr-instagram-item:hover .gr-instagram-image img {
+    transform: scale(1.05);
+  }
+  
+  .gr-instagram-icon {
+    margin-bottom: 10px;
+  }
+  
+  .gr-instagram-caption {
+    font-size: 0.9em;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+  }
+  
+  .gr-instagram-follow {
+    margin-top: 20px;
+    text-align: center;
+  }
+  
+  .gr-instagram-follow-link {
+    display: inline-flex;
+    align-items: center;
+    color: {{ settings.gr_color_principal }};
+    text-decoration: none;
+    font-weight: bold;
+    transition: opacity 0.2s ease;
+  }
+  
+  .gr-instagram-follow-link svg {
+    margin-right: 8px;
+  }
+  
+  .gr-instagram-follow-link:hover {
+    opacity: 0.8;
+  }
+</style>
+
+{% schema %}
+{
+  "name": "GR Instagram",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Título",
+      "default": "Instagram"
+    },
+    {
+      "type": "textarea",
+      "id": "description",
+      "label": "Descripción",
+      "default": "Síguenos en Instagram para ver más contenido"
+    },
+    {
+      "type": "range",
+      "id": "columns_desktop",
+      "min": 3,
+      "max": 6,
+      "step": 1,
+      "default": 5,
+      "label": "Columnas en escritorio"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_follow_link",
+      "label": "Mostrar enlace para seguir",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "follow_text",
+      "label": "Texto del enlace",
+      "default": "Síguenos en Instagram"
+    },
+    {
+      "type": "url",
+      "id": "instagram_url",
+      "label": "URL de Instagram"
+    }
+  ],
+  "blocks": [
+    {
+      "name": "Publicación",
+      "type": "post",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Imagen"
+        },
+        {
+          "type": "url",
+          "id": "link",
+          "label": "Enlace a la publicación"
+        },
+        {
+          "type": "checkbox",
+          "id": "show_caption",
+          "label": "Mostrar pie de foto",
+          "default": true
+        },
+        {
+          "type": "textarea",
+          "id": "caption",
+          "label": "Pie de foto"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "GR Instagram",
+      "blocks": [
+        {
+          "type": "post"
+        },
+        {
+          "type": "post"
+        },
+        {
+          "type": "post"
+        },
+        {
+          "type": "post"
+        },
+        {
+          "type": "post"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

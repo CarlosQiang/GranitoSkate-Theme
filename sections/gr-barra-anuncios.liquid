@@ -1,0 +1,190 @@
+<div class="gr-announcement-bar" 
+     style="height: {{ section.settings.banner_height }}px; background-color: {{ section.settings.background_color }};"
+     data-api-url="{{ section.settings.api_url }}">
+  <div class="page-width">
+    <div class="gr-announcement-bar__content" id="announcement-content">
+      <div class="announcement-loading">
+        <span class="loading-dot"></span>
+        <span class="loading-dot"></span>
+        <span class="loading-dot"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .gr-announcement-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    color: {{ section.settings.text_color }};
+    transition: height 0.3s ease;
+    overflow: hidden;
+  }
+
+  .gr-announcement-bar__content {
+    text-align: center;
+    width: 100%;
+    font-size: {{ section.settings.text_size }}px;
+  }
+
+  .announcement-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .loading-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: {{ section.settings.text_color }};
+    animation: dot-pulse 1.5s infinite ease-in-out;
+  }
+
+  .loading-dot:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+
+  .loading-dot:nth-child(3) {
+    animation-delay: 0.4s;
+  }
+
+  @keyframes dot-pulse {
+    0%, 100% { transform: scale(0.8); opacity: 0.5; }
+    50% { transform: scale(1.2); opacity: 1; }
+  }
+
+  .announcement-slide {
+    display: none;
+    width: 100%;
+    animation: fadeIn 0.5s ease-in-out;
+  }
+
+  .announcement-slide.active {
+    display: block;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .announcement-error {
+    color: #ff6b6b;
+    font-style: italic;
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const announcementBar = document.querySelector('.gr-announcement-bar');
+    const contentContainer = document.getElementById('announcement-content');
+    const apiUrl = announcementBar.dataset.apiUrl;
+    
+    if (!apiUrl) {
+      contentContainer.innerHTML = '<div class="announcement-error">No se ha configurado una URL de API</div>';
+      return;
+    }
+    
+    // Función para obtener anuncios de la API
+    async function fetchAnnouncements() {
+      try {
+        const response = await fetch(apiUrl);
+        
+        if (!response.ok) {
+          throw new Error(`Error HTTP: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (!data || !Array.isArray(data) || data.length === 0) {
+          contentContainer.innerHTML = '<div class="announcement-error">No hay anuncios disponibles</div>';
+          return;
+        }
+        
+        // Limpiar el contenedor
+        contentContainer.innerHTML = '';
+        
+        // Crear slides para cada anuncio
+        data.forEach((announcement, index) => {
+          const slide = document.createElement('div');
+          slide.className = `announcement-slide ${index === 0 ? 'active' : ''}`;
+          slide.innerHTML = announcement.text || announcement.message || announcement.content || '';
+          contentContainer.appendChild(slide);
+        });
+        
+        // Si hay más de un anuncio, configurar rotación
+        if (data.length > 1) {
+          let currentSlide = 0;
+          setInterval(() => {
+            const slides = contentContainer.querySelectorAll('.announcement-slide');
+            slides[currentSlide].classList.remove('active');
+            currentSlide = (currentSlide + 1) % slides.length;
+            slides[currentSlide].classList.add('active');
+          }, 5000); // Cambiar cada 5 segundos
+        }
+      } catch (error) {
+        console.error('Error al obtener anuncios:', error);
+        contentContainer.innerHTML = '<div class="announcement-error">Error al cargar los anuncios</div>';
+      }
+    }
+    
+    // Iniciar la carga de anuncios
+    fetchAnnouncements();
+  });
+</script>
+
+{% schema %}
+{
+  "name": "Barra de anuncios API",
+  "settings": [
+    {
+      "type": "url",
+      "id": "api_url",
+      "label": "URL de la API de anuncios",
+      "info": "URL completa de la API que proporciona los anuncios"
+    },
+    {
+      "type": "range",
+      "id": "banner_height",
+      "min": 30,
+      "max": 100,
+      "step": 5,
+      "unit": "px",
+      "label": "Altura del banner",
+      "default": 40
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Color de fondo",
+      "default": "#d29a43"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Color del texto",
+      "default": "#ffffff"
+    },
+    {
+      "type": "range",
+      "id": "text_size",
+      "min": 12,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "label": "Tamaño del texto",
+      "default": 14
+    }
+  ],
+  "presets": [
+    {
+      "name": "Barra de anuncios API",
+      "category": "Granito"
+    }
+  ]
+}
+{% endschema %}

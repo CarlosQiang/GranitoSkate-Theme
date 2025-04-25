@@ -1,0 +1,90 @@
+{% comment %}
+  Botón para añadir/quitar productos de la lista de favoritos
+  Uso: {% render 'gr-wishlist-button', product: product %}
+{% endcomment %}
+
+{% if settings.gr_enable_wishlist %}
+  <button 
+    class="gr-wishlist-button" 
+    data-product-id="{{ product.id }}" 
+    data-product-handle="{{ product.handle }}"
+    data-product-title="{{ product.title | escape }}"
+    aria-label="{% if in_wishlist %}Quitar de favoritos{% else %}Añadir a favoritos{% endif %}"
+  >
+    <span class="gr-wishlist-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="{% if in_wishlist %}{{ settings.gr_color_principal }}{% else %}none{% endif %}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-heart">
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+      </svg>
+    </span>
+    <span class="gr-wishlist-text visually-hidden">
+      {% if in_wishlist %}
+        Quitar de favoritos
+      {% else %}
+        Añadir a favoritos
+      {% endif %}
+    </span>
+  </button>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const wishlistButton = document.querySelector('.gr-wishlist-button');
+      
+      if (wishlistButton) {
+        wishlistButton.addEventListener('click', function(e) {
+          e.preventDefault();
+          
+          const productId = this.dataset.productId;
+          const productTitle = this.dataset.productTitle;
+          const icon = this.querySelector('.gr-wishlist-icon svg');
+          
+          if (window.granitoAPI) {
+            if (icon.getAttribute('fill') === 'none') {
+              // Añadir a favoritos
+              window.granitoAPI.addToWishlist(productId, productTitle)
+                .then(response => {
+                  if (!response.error) {
+                    icon.setAttribute('fill', '{{ settings.gr_color_principal }}');
+                    this.setAttribute('aria-label', 'Quitar de favoritos');
+                    this.querySelector('.gr-wishlist-text').textContent = 'Quitar de favoritos';
+                  }
+                });
+            } else {
+              // Quitar de favoritos
+              window.granitoAPI.removeFromWishlist(productId)
+                .then(response => {
+                  if (!response.error) {
+                    icon.setAttribute('fill', 'none');
+                    this.setAttribute('aria-label', 'Añadir a favoritos');
+                    this.querySelector('.gr-wishlist-text').textContent = 'Añadir a favoritos';
+                  }
+                });
+            }
+          } else {
+            console.log('Granito API not available');
+          }
+        });
+      }
+    });
+  </script>
+
+  <style>
+    .gr-wishlist-button {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 5px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s ease;
+    }
+    
+    .gr-wishlist-button:hover {
+      transform: scale(1.1);
+    }
+    
+    .gr-wishlist-icon svg {
+      stroke: {{ settings.gr_color_principal }};
+    }
+  </style>
+{% endif %}

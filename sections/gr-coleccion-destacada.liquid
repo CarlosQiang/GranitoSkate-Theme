@@ -1,0 +1,625 @@
+{% comment %}
+  @name: GR Colección Destacada
+  @description: Muestra productos de una colección seleccionada
+  @author: v0
+{% endcomment %}
+
+<div class="gr-coleccion-destacada" data-section-id="{{ section.id }}" data-section-type="coleccion-destacada">
+  <div class="page-width">
+    {% if section.settings.title != blank %}
+      <div class="section-header text-{{ section.settings.text_alignment }}">
+        <h2 class="h1" style="color: {{ section.settings.title_color }};">{{ section.settings.title | escape }}</h2>
+        {% if section.settings.description != blank %}
+          <div class="rte" style="color: {{ section.settings.text_color }};">{{ section.settings.description }}</div>
+        {% endif %}
+      </div>
+    {% endif %}
+
+    {% assign collection = collections[section.settings.collection] %}
+    
+    {% if collection != blank and collection.products.size > 0 %}
+      <div class="gr-productos-grid" style="--grid-column-count: {{ section.settings.products_per_row }};">
+        {% for product in collection.products limit: section.settings.products_to_show %}
+          <div class="gr-producto-card">
+            <div class="gr-producto-card__image-container">
+              <a href="{{ product.url }}" class="gr-producto-card__link">
+                {% if product.featured_image != blank %}
+                  <div class="gr-producto-card__image" style="padding-bottom: {{ 100 | divided_by: section.settings.image_ratio }}%;">
+                    <img 
+                      srcset="
+                        {{ product.featured_image | img_url: '300x' }} 300w,
+                        {{ product.featured_image | img_url: '400x' }} 400w,
+                        {{ product.featured_image | img_url: '500x' }} 500w,
+                        {{ product.featured_image | img_url: '600x' }} 600w
+                      "
+                      src="{{ product.featured_image | img_url: '400x' }}"
+                      alt="{{ product.featured_image.alt | default: product.title }}"
+                      width="400"
+                      height="{{ 400 | divided_by: section.settings.image_ratio | round }}"
+                      loading="lazy"
+                      class="gr-producto-image"
+                    >
+                    
+                    {% if section.settings.show_secondary_image and product.images[1] != blank %}
+                      <img 
+                        srcset="
+                          {{ product.images[1] | img_url: '300x' }} 300w,
+                          {{ product.images[1] | img_url: '400x' }} 400w,
+                          {{ product.images[1] | img_url: '500x' }} 500w,
+                          {{ product.images[1] | img_url: '600x' }} 600w
+                        "
+                        src="{{ product.images[1] | img_url: '400x' }}"
+                        alt="{{ product.images[1].alt | default: product.title }}"
+                        width="400"
+                        height="{{ 400 | divided_by: section.settings.image_ratio | round }}"
+                        loading="lazy"
+                        class="gr-producto-image gr-producto-image--secondary"
+                      >
+                    {% endif %}
+                  </div>
+                {% else %}
+                  <div class="gr-producto-card__image gr-producto-card__image--placeholder" style="padding-bottom: {{ 100 | divided_by: section.settings.image_ratio }}%;">
+                    {{ 'product-1' | placeholder_svg_tag: 'placeholder-svg' }}
+                  </div>
+                {% endif %}
+                
+                {% if section.settings.show_badges %}
+                  <div class="gr-producto-card__badges">
+                    {% if product.available == false %}
+                      <span class="gr-producto-badge gr-producto-badge--soldout">{{ 'products.product.sold_out' | t }}</span>
+                    {% endif %}
+                    
+                    {% if product.compare_at_price > product.price and product.available %}
+                      <span class="gr-producto-badge gr-producto-badge--sale">{{ 'products.product.on_sale' | t }}</span>
+                    {% endif %}
+                  </div>
+                {% endif %}
+                
+                {% if section.settings.show_quick_view %}
+                  <div class="gr-producto-card__quick-view">
+                    <button class="gr-producto-quick-view-btn" data-product-url="{{ product.url }}?view=quick-view">
+                      Vista rápida
+                    </button>
+                  </div>
+                {% endif %}
+              </a>
+            </div>
+            
+            <div class="gr-producto-card__info">
+              {% if section.settings.show_vendor and product.vendor != blank %}
+                <div class="gr-producto-card__vendor">{{ product.vendor }}</div>
+              {% endif %}
+              
+              <h3 class="gr-producto-card__title">
+                <a href="{{ product.url }}">{{ product.title }}</a>
+              </h3>
+              
+              <div class="gr-producto-card__price">
+                {% if product.compare_at_price > product.price %}
+                  <span class="gr-producto-price gr-producto-price--sale">{{ product.price | money }}</span>
+                  <span class="gr-producto-price gr-producto-price--compare">{{ product.compare_at_price | money }}</span>
+                {% else %}
+                  <span class="gr-producto-price">{{ product.price | money }}</span>
+                {% endif %}
+              </div>
+              
+              {% if section.settings.show_rating and product.metafields.reviews.rating %}
+                <div class="gr-producto-card__rating">
+                  <span class="gr-producto-rating" style="--rating: {{ product.metafields.reviews.rating.value }};">
+                    <span class="gr-producto-rating__stars">★★★★★</span>
+                  </span>
+                  <span class="gr-producto-rating__count">({{ product.metafields.reviews.rating_count }})</span>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+      
+      {% if section.settings.show_view_all and collection.products.size > section.settings.products_to_show %}
+        <div class="gr-coleccion-view-all text-{{ section.settings.text_alignment }}">
+          <a href="{{ collection.url }}" class="gr-view-all-btn" style="background-color: {{ section.settings.button_background_color }}; color: {{ section.settings.button_text_color }};">
+            {{ section.settings.view_all_text | escape }}
+          </a>
+        </div>
+      {% endif %}
+    {% else %}
+      <div class="gr-coleccion-empty">
+        <p>{{ 'collections.general.no_matches' | t }}</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<style>
+  .gr-coleccion-destacada {
+    padding: {{ section.settings.padding_top }}px 0 {{ section.settings.padding_bottom }}px;
+    background-color: {{ section.settings.background_color }};
+  }
+  
+  .gr-productos-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: {{ section.settings.grid_gap }}px;
+    margin-top: 30px;
+  }
+  
+  @media screen and (min-width: 750px) {
+    .gr-productos-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  
+  @media screen and (min-width: 990px) {
+    .gr-productos-grid {
+      grid-template-columns: repeat(var(--grid-column-count), 1fr);
+    }
+  }
+  
+  .gr-producto-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background-color: {{ section.settings.card_background_color }};
+    border-radius: {{ section.settings.card_border_radius }}px;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .gr-producto-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  .gr-producto-card__image-container {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .gr-producto-card__image {
+    position: relative;
+    height: 0;
+    overflow: hidden;
+  }
+  
+  .gr-producto-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: {{ section.settings.image_fit }};
+    transition: opacity 0.3s ease, transform 0.5s ease;
+  }
+  
+  .gr-producto-image--secondary {
+    opacity: 0;
+  }
+  
+  .gr-producto-card:hover .gr-producto-image {
+    transform: scale(1.05);
+  }
+  
+  .gr-producto-card:hover .gr-producto-image--secondary {
+    opacity: 1;
+  }
+  
+  .gr-producto-card:hover .gr-producto-image:first-child {
+    opacity: 0;
+  }
+  
+  .gr-producto-card__image--placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f5f5f5;
+  }
+  
+  .gr-producto-card__badges {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .gr-producto-badge {
+    padding: 4px 8px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 3px;
+    text-transform: uppercase;
+  }
+  
+  .gr-producto-badge--sale {
+    background-color: {{ section.settings.sale_badge_color }};
+    color: #ffffff;
+  }
+  
+  .gr-producto-badge--soldout {
+    background-color: {{ section.settings.soldout_badge_color }};
+    color: #ffffff;
+  }
+  
+  .gr-producto-card__quick-view {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 10px;
+    background-color: rgba(0, 0, 0, 0.7);
+    opacity: 0;
+    transform: translateY(100%);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    text-align: center;
+  }
+  
+  .gr-producto-card:hover .gr-producto-card__quick-view {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  
+  .gr-producto-quick-view-btn {
+    background: none;
+    border: 1px solid #fff;
+    color: #fff;
+    padding: 5px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    border-radius: 3px;
+  }
+  
+  .gr-producto-card__info {
+    padding: 15px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .gr-producto-card__vendor {
+    font-size: 12px;
+    color: {{ section.settings.vendor_color }};
+    margin-bottom: 5px;
+  }
+  
+  .gr-producto-card__title {
+    margin: 0 0 10px;
+    font-size: 16px;
+    font-weight: 500;
+  }
+  
+  .gr-producto-card__title a {
+    color: {{ section.settings.title_color }};
+    text-decoration: none;
+  }
+  
+  .gr-producto-card__price {
+    margin-bottom: 10px;
+    font-weight: 600;
+    color: {{ section.settings.price_color }};
+  }
+  
+  .gr-producto-price--compare {
+    text-decoration: line-through;
+    opacity: 0.7;
+    margin-left: 5px;
+    font-weight: 400;
+  }
+  
+  .gr-producto-card__rating {
+    display: flex;
+    align-items: center;
+    margin-top: auto;
+  }
+  
+  .gr-producto-rating {
+    position: relative;
+    display: inline-block;
+    color: #ddd;
+    width: 80px;
+    height: 16px;
+    margin-right: 5px;
+  }
+  
+  .gr-producto-rating__stars {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+  
+  .gr-producto-rating::after {
+    content: "★★★★★";
+    position: absolute;
+    top: 0;
+    left: 0;
+    color: {{ section.settings.star_color }};
+    width: calc(var(--rating) / 5 * 100%);
+    overflow: hidden;
+  }
+  
+  .gr-producto-rating__count {
+    font-size: 12px;
+    color: {{ section.settings.text_color }};
+  }
+  
+  .gr-coleccion-view-all {
+    margin-top: 40px;
+  }
+  
+  .gr-view-all-btn {
+    display: inline-block;
+    padding: 12px 24px;
+    border-radius: 4px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: opacity 0.3s ease;
+  }
+  
+  .gr-view-all-btn:hover {
+    opacity: 0.9;
+  }
+  
+  .gr-coleccion-empty {
+    padding: 40px;
+    text-align: center;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+    margin-top: 30px;
+  }
+</style>
+
+{% schema %}
+{
+  "name": "GR Colección Destacada",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Título",
+      "default": "Productos destacados"
+    },
+    {
+      "type": "richtext",
+      "id": "description",
+      "label": "Descripción"
+    },
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "Colección"
+    },
+    {
+      "type": "range",
+      "id": "products_to_show",
+      "min": 2,
+      "max": 12,
+      "step": 1,
+      "default": 4,
+      "label": "Productos a mostrar"
+    },
+    {
+      "type": "range",
+      "id": "products_per_row",
+      "min": 2,
+      "max": 5,
+      "step": 1,
+      "default": 4,
+      "label": "Productos por fila"
+    },
+    {
+      "type": "range",
+      "id": "grid_gap",
+      "min": 10,
+      "max": 40,
+      "step": 5,
+      "unit": "px",
+      "label": "Espacio entre productos",
+      "default": 20
+    },
+    {
+      "type": "checkbox",
+      "id": "show_view_all",
+      "label": "Mostrar botón 'Ver todo'",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "view_all_text",
+      "label": "Texto del botón 'Ver todo'",
+      "default": "Ver todos los productos"
+    },
+    {
+      "type": "header",
+      "content": "Imagen del producto"
+    },
+    {
+      "type": "range",
+      "id": "image_ratio",
+      "min": 0.5,
+      "max": 1.5,
+      "step": 0.1,
+      "unit": ":1",
+      "label": "Proporción de imagen",
+      "default": 1
+    },
+    {
+      "type": "select",
+      "id": "image_fit",
+      "label": "Ajuste de imagen",
+      "options": [
+        {
+          "value": "cover",
+          "label": "Cubrir"
+        },
+        {
+          "value": "contain",
+          "label": "Contener"
+        }
+      ],
+      "default": "cover"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_secondary_image",
+      "label": "Mostrar segunda imagen al pasar el ratón",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_badges",
+      "label": "Mostrar insignias (agotado, en oferta)",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_quick_view",
+      "label": "Mostrar vista rápida",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Información del producto"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_vendor",
+      "label": "Mostrar proveedor",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "show_rating",
+      "label": "Mostrar calificación",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Colores y estilos"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Color de fondo",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "title_color",
+      "label": "Color del título",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Color del texto",
+      "default": "#333333"
+    },
+    {
+      "type": "color",
+      "id": "price_color",
+      "label": "Color del precio",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "vendor_color",
+      "label": "Color del proveedor",
+      "default": "#666666"
+    },
+    {
+      "type": "color",
+      "id": "star_color",
+      "label": "Color de estrellas",
+      "default": "#d29a43"
+    },
+    {
+      "type": "color",
+      "id": "sale_badge_color",
+      "label": "Color de insignia de oferta",
+      "default": "#d29a43"
+    },
+    {
+      "type": "color",
+      "id": "soldout_badge_color",
+      "label": "Color de insignia de agotado",
+      "default": "#999999"
+    },
+    {
+      "type": "color",
+      "id": "card_background_color",
+      "label": "Color de fondo de tarjeta",
+      "default": "#ffffff"
+    },
+    {
+      "type": "range",
+      "id": "card_border_radius",
+      "min": 0,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "label": "Radio de borde de tarjeta",
+      "default": 8
+    },
+    {
+      "type": "color",
+      "id": "button_background_color",
+      "label": "Color de fondo del botón",
+      "default": "#d29a43"
+    },
+    {
+      "type": "color",
+      "id": "button_text_color",
+      "label": "Color de texto del botón",
+      "default": "#ffffff"
+    },
+    {
+      "type": "select",
+      "id": "text_alignment",
+      "label": "Alineación del texto",
+      "options": [
+        {
+          "value": "left",
+          "label": "Izquierda"
+        },
+        {
+          "value": "center",
+          "label": "Centro"
+        },
+        {
+          "value": "right",
+          "label": "Derecha"
+        }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 10,
+      "unit": "px",
+      "label": "Relleno superior",
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 10,
+      "unit": "px",
+      "label": "Relleno inferior",
+      "default": 40
+    }
+  ],
+  "presets": [
+    {
+      "name": "GR Colección Destacada",
+      "category": "Colección"
+    }
+  ]
+}
+{% endschema %}

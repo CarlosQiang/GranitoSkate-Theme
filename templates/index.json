@@ -1,0 +1,160 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "image_banner": {
+      "type": "image-banner",
+      "blocks": {
+        "heading": {
+          "type": "heading",
+          "settings": {
+            "heading": "Browse our latest products",
+            "heading_size": "h0"
+          }
+        },
+        "button": {
+          "type": "buttons",
+          "settings": {
+            "button_label_1": "Shop all",
+            "button_link_1": "shopify://collections/all",
+            "button_style_secondary_1": true,
+            "button_label_2": "",
+            "button_link_2": "",
+            "button_style_secondary_2": false
+          }
+        }
+      },
+      "block_order": [
+        "heading",
+        "button"
+      ],
+      "disabled": true,
+      "settings": {
+        "image_overlay_opacity": 40,
+        "image_height": "large",
+        "image_behavior": "none",
+        "desktop_content_position": "bottom-center",
+        "desktop_content_alignment": "center",
+        "show_text_box": false,
+        "color_scheme": "scheme-3",
+        "stack_images_on_mobile": false,
+        "mobile_content_alignment": "center",
+        "show_text_below": false
+      }
+    },
+    "featured_collection": {
+      "type": "featured-collection",
+      "disabled": true,
+      "settings": {
+        "collection": "all",
+        "products_to_show": 8,
+        "title": "Featured products",
+        "heading_size": "h2",
+        "description": "",
+        "show_description": false,
+        "description_style": "body",
+        "columns_desktop": 4,
+        "enable_desktop_slider": false,
+        "full_width": false,
+        "show_view_all": true,
+        "view_all_style": "solid",
+        "color_scheme": "scheme-1",
+        "image_ratio": "adapt",
+        "image_shape": "default",
+        "show_secondary_image": true,
+        "show_vendor": false,
+        "show_rating": false,
+        "quick_add": "none",
+        "columns_mobile": "2",
+        "swipe_on_mobile": false,
+        "padding_top": 44,
+        "padding_bottom": 36
+      }
+    },
+    "gr_image_banner_dC7Gwn": {
+      "type": "gr-image-banner",
+      "blocks": {
+        "heading_8FKmNm": {
+          "type": "heading",
+          "settings": {
+            "heading": "Título del banner"
+          }
+        },
+        "text_ckJHzi": {
+          "type": "text",
+          "settings": {
+            "text": "<p>Añade una descripción o subtítulo para complementar el título del banner</p>"
+          }
+        },
+        "buttons_FRhLEj": {
+          "type": "buttons",
+          "settings": {
+            "button_label_1": "Botón primario",
+            "button_link_1": "",
+            "button_style_1": "primary",
+            "button_label_2": "Botón secundario",
+            "button_link_2": "",
+            "button_style_2": "secondary"
+          }
+        }
+      },
+      "block_order": [
+        "heading_8FKmNm",
+        "text_ckJHzi",
+        "buttons_FRhLEj"
+      ],
+      "name": "GR Banner de Imagen",
+      "settings": {
+        "height": 500,
+        "height_mobile": 350,
+        "image_fit": "cover",
+        "focal_point": "center center",
+        "show_overlay": true,
+        "overlay_color": "#000000",
+        "overlay_opacity": 30,
+        "content_position": "middle",
+        "content_alignment": "center",
+        "content_width": 600,
+        "text_color": "#ffffff",
+        "text_shadow": true,
+        "heading_size": 48,
+        "heading_size_mobile": 32,
+        "heading_weight": "700",
+        "text_size": 18,
+        "text_size_mobile": 16,
+        "button_background_color": "#d29a43",
+        "button_text_color": "#ffffff",
+        "button_background_hover_color": "#b88536",
+        "margin_bottom": 0
+      }
+    },
+    "gr_featured_collection_rcWWYB": {
+      "type": "gr-featured-collection",
+      "name": "GR Colección Destacada",
+      "settings": {
+        "title": "Productos destacados",
+        "description": "",
+        "collection": "",
+        "products_to_show": 4,
+        "products_per_row": 4,
+        "show_vendor": false,
+        "show_secondary_image": true,
+        "show_view_all": true,
+        "button_text_color": "#ffffff"
+      }
+    }
+  },
+  "order": [
+    "image_banner",
+    "featured_collection",
+    "gr_image_banner_dC7Gwn",
+    "gr_featured_collection_rcWWYB"
+  ]
+}

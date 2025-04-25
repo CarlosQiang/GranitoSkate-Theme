@@ -1,0 +1,323 @@
+{% comment %}
+  Sección de mensajes
+{% endcomment %}
+
+<div class="gr-messages-section" id="gr-messages-container">
+  <div class="page-width">
+    {% if section.settings.title != blank %}
+      <h2 class="gr-section-title">{{ section.settings.title }}</h2>
+    {% endif %}
+    
+    <div class="gr-messages-loading">Cargando mensajes...</div>
+    
+    <div class="gr-messages-content" style="display: none;">
+      <div class="gr-messages-form">
+        <h3>Enviar un mensaje</h3>
+        
+        <form id="gr-message-form">
+          <div class="gr-form-field">
+            <label for="gr-message-subject">Asunto</label>
+            <input type="text" id="gr-message-subject" name="asunto" required>
+          </div>
+          
+          <div class="gr-form-field">
+            <label for="gr-message-content">Mensaje</label>
+            <textarea id="gr-message-content" name="mensaje" rows="4" required></textarea>
+          </div>
+          
+          <button type="submit" class="gr-submit-button">Enviar mensaje</button>
+        </form>
+      </div>
+      
+      <div class="gr-messages-list">
+        <h3>Mis mensajes</h3>
+        <div class="gr-messages-items">
+          <!-- Los mensajes se cargarán aquí dinámicamente -->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    if (window.granitoAPI) {
+      const messagesContainer = document.getElementById('gr-messages-container');
+      const loadingElement = messagesContainer.querySelector('.gr-messages-loading');
+      const contentElement = messagesContainer.querySelector('.gr-messages-content');
+      const messagesList = messagesContainer.querySelector('.gr-messages-items');
+      const messageForm = document.getElementById('gr-message-form');
+      
+      // Cargar mensajes
+      const loadMessages = async () => {
+        try {
+          const response = await window.granitoAPI.getMessages();
+          
+          loadingElement.style.display = 'none';
+          contentElement.style.display = 'flex';
+          
+          if (response.error) {
+            // Si hay un error de autenticación, mostrar mensaje para iniciar sesión
+            if (response.error.includes('autenticado')) {
+              messagesList.innerHTML = `
+                <div class="gr-messages-auth-required">
+                  <p>Debes iniciar sesión para ver tus mensajes.</p>
+                  <a href="/account/login" class="gr-button">Iniciar sesión</a>
+                </div>
+              `;
+            } else {
+              messagesList.innerHTML = `<p>Error al cargar los mensajes.</p>`;
+            }
+            return;
+          }
+          
+          if (response.length === 0) {
+            messagesList.innerHTML = `<p>No tienes mensajes.</p>`;
+            return;
+          }
+          
+          // Ordenar mensajes por fecha (más recientes primero)
+          const messages = response.sort((a, b) => {
+            return new Date(b.fecha_creacion) - new Date(a.fecha_creacion);
+          });
+          
+          // Crear HTML para cada mensaje
+          let messagesHTML = '';
+          
+          messages.forEach(message => {
+            const date = new Date(message.fecha_creacion);
+            
+            messagesHTML += `
+              <div class="gr-message-item">
+                <div class="gr-message-header">
+                  <div class="gr-message-subject">${message.asunto}</div>
+                  <div class="gr-message-date">${date.toLocaleDateString()}</div>
+                </div>
+                
+                <div class="gr-message-content">${message.mensaje}</div>
+                
+                ${message.respuesta_admin ? `
+                  <div class="gr-message-response">
+                    <div class="gr-response-header">
+                      <div class="gr-response-author">${message.admin_nombre || 'Administrador'}</div>
+                      <div class="gr-response-date">${new Date(message.fecha_respuesta).toLocaleDateString()}</div>
+                    </div>
+                    <div class="gr-response-content">${message.respuesta_admin}</div>
+                  </div>
+                ` : ''}
+              </div>
+            `;
+          });
+          
+          messagesList.innerHTML = messagesHTML;
+        } catch (error) {
+          console.error('Error al cargar mensajes:', error);
+          loadingElement.textContent = 'Error al cargar los mensajes.';
+        }
+      };
+      
+      // Manejar envío del formulario
+      if (messageForm) {
+        messageForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          
+          const formData = new FormData(messageForm);
+          const messageData = {
+            asunto: formData.get('asunto'),
+            mensaje: formData.get('mensaje')
+          };
+          
+          window.granitoAPI.sendMessage(messageData.asunto, messageData.mensaje)
+            .then(response => {
+              if (response.error) {
+                if (response.error.includes('autenticado')) {
+                  alert('Debes iniciar sesión para enviar mensajes.');
+                } else {
+                  alert('Error al enviar el mensaje. Por favor, inténtalo de nuevo.');
+                }
+                return;
+              }
+              
+              alert('¡Mensaje enviado correctamente!');
+              messageForm.reset();
+              
+              // Recargar mensajes
+              loadMessages();
+            });
+        });
+      }
+      
+      // Iniciar carga de mensajes
+      loadMessages();
+    }
+  });
+</script>
+
+<style>
+  .gr-messages-section {
+    margin: 40px 0;
+  }
+  
+  .gr-section-title {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  
+  .gr-messages-loading {
+    text-align: center;
+    padding: 20px;
+  }
+  
+  .gr-messages-content {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+  }
+  
+  @media screen and (min-width: 750px) {
+    .gr-messages-content {
+      flex-direction: row;
+    }
+    
+    .gr-messages-form,
+    .gr-messages-list {
+      flex: 1;
+    }
+  }
+  
+  .gr-messages-form {
+    padding: 20px;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+  }
+  
+  .gr-form-field {
+    margin-bottom: 15px;
+  }
+  
+  .gr-form-field label {
+    display: block;
+    margin-bottom: 5px;
+  }
+  
+  .gr-form-field input,
+  .gr-form-field textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #e5e5e5;
+    border-radius: 4px;
+  }
+  
+  .gr-submit-button {
+    background-color: {{ settings.gr_color_principal }};
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  
+  .gr-submit-button:hover {
+    background-color: {{ settings.gr_color_secundario }};
+  }
+  
+  .gr-messages-list {
+    padding: 20px;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+  }
+  
+  .gr-messages-auth-required {
+    text-align: center;
+    padding: 20px;
+  }
+  
+  .gr-button {
+    display: inline-block;
+    background-color: {{ settings.gr_color_principal }};
+    color: white;
+    padding: 10px 15px;
+    border-radius: 4px;
+    text-decoration: none;
+    margin-top: 10px;
+    transition: background-color 0.2s ease;
+  }
+  
+  .gr-button:hover {
+    background-color: {{ settings.gr_color_secundario }};
+  }
+  
+  .gr-message-item {
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+  }
+  
+  .gr-message-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #e5e5e5;
+    padding-bottom: 5px;
+  }
+  
+  .gr-message-subject {
+    font-weight: bold;
+  }
+  
+  .gr-message-date {
+    font-size: 0.8em;
+    color: #777;
+  }
+  
+  .gr-message-content {
+    margin-bottom: 15px;
+  }
+  
+  .gr-message-response {
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    padding: 10px;
+  }
+  
+  .gr-response-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+  }
+  
+  .gr-response-author {
+    font-weight: bold;
+    color: {{ settings.gr_color_principal }};
+  }
+  
+  .gr-response-date {
+    font-size: 0.8em;
+    color: #777;
+  }
+</style>
+
+{% schema %}
+{
+  "name": "GR Mensajes",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Título de la sección",
+      "default": "Mensajes"
+    }
+  ],
+  "presets": [
+    {
+      "name": "GR Mensajes"
+    }
+  ]
+}
+{% endschema %}

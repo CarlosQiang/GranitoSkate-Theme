@@ -1,0 +1,689 @@
+{% comment %}
+@name: GR Footer
+@description: Footer personalizable con colores de marca
+@author: v0
+{% endcomment %}
+
+<footer class="gr-footer">
+  <div class="page-width">
+    <div class="gr-footer__content">
+      {% if section.blocks.size > 0 %}
+        <div class="gr-footer__blocks">
+          {% for block in section.blocks %}
+            {% case block.type %}
+              {% when 'text' %}
+                <div class="gr-footer__block gr-footer__block--text" {{ block.shopify_attributes }}>
+                  {% if block.settings.title != blank %}
+                    <h3 class="gr-footer__block-title">{{ block.settings.title | escape }}</h3>
+                  {% endif %}
+                  {% if block.settings.text != blank %}
+                    <div class="gr-footer__block-text rte">{{ block.settings.text }}</div>
+                  {% endif %}
+                </div>
+              
+              {% when 'links' %}
+                <div class="gr-footer__block gr-footer__block--links" {{ block.shopify_attributes }}>
+                  {% if block.settings.title != blank %}
+                    <h3 class="gr-footer__block-title">{{ block.settings.title | escape }}</h3>
+                  {% endif %}
+                  {% if block.settings.menu != blank %}
+                    <ul class="gr-footer__menu">
+                      {% for link in linklists[block.settings.menu].links %}
+                        <li>
+                          <a href="{{ link.url }}" class="gr-footer__menu-link">
+                            {{ link.title | escape }}
+                          </a>
+                        </li>
+                      {% endfor %}
+                    </ul>
+                  {% endif %}
+                </div>
+              
+              {% when 'newsletter' %}
+                <div class="gr-footer__block gr-footer__block--newsletter" {{ block.shopify_attributes }}>
+                  {% if block.settings.title != blank %}
+                    <h3 class="gr-footer__block-title">{{ block.settings.title | escape }}</h3>
+                  {% endif %}
+                  {% if block.settings.text != blank %}
+                    <div class="gr-footer__newsletter-text rte">{{ block.settings.text }}</div>
+                  {% endif %}
+                  
+                  {% form 'customer', id: 'ContactFooter', class: 'gr-footer__newsletter-form' %}
+                    {% if form.posted_successfully? %}
+                      <p class="gr-footer__newsletter-success">{{ 'general.newsletter_form.confirmation' | t }}</p>
+                    {% endif %}
+                    <input type="hidden" name="contact[tags]" value="newsletter">
+                    <div class="gr-footer__newsletter-field">
+                      <label for="ContactFooter-email" class="visually-hidden">{{ 'general.newsletter_form.email_placeholder' | t }}</label>
+                      <input 
+                        type="email"
+                        name="contact[email]"
+                        id="ContactFooter-email"
+                        class="gr-footer__newsletter-input"
+                        value="{{ form.email }}"
+                        placeholder="{{ 'general.newsletter_form.email_placeholder' | t }}"
+                        required
+                      >
+                      <button type="submit" class="gr-footer__newsletter-submit" name="commit">
+                        <span>{{ 'general.newsletter_form.submit' | t }}</span>
+                      </button>
+                    </div>
+                    {% if form.errors %}
+                      <div class="gr-footer__newsletter-error">
+                        {{ form.errors.translated_fields.email | capitalize }} {{ form.errors.messages.email }}
+                      </div>
+                    {% endif %}
+                  {% endform %}
+                </div>
+              
+              {% when 'social' %}
+                <div class="gr-footer__block gr-footer__block--social" {{ block.shopify_attributes }}>
+                  {% if block.settings.title != blank %}
+                    <h3 class="gr-footer__block-title">{{ block.settings.title | escape }}</h3>
+                  {% endif %}
+                  <ul class="gr-footer__social-icons">
+                    {% if settings.social_facebook_link != blank %}
+                      <li>
+                        <a href="{{ settings.social_facebook_link }}" class="gr-footer__social-link" aria-label="Facebook">
+                          <svg aria-hidden="true" focusable="false" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M22 12C22 6.48 17.52 2 12 2C6.48 2 2 6.48 2 12C2 16.84 5.44 20.87 10 21.8V15H8V12H10V9.5C10 7.57 11.57 6 13.5 6H16V9H14C13.45 9 13 9.45 13 10V12H16V15H13V21.95C18.05 21.45 22 17.19 22 12Z" fill="currentColor"/>
+                          </svg>
+                        </a>
+                      </li>
+                    {% endif %}
+                    {% if settings.social_twitter_link != blank %}
+                      <li>
+                        <a href="{{ settings.social_twitter_link }}" class="gr-footer__social-link" aria-label="Twitter">
+                          <svg aria-hidden="true" focusable="false" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M22.46 6C21.69 6.35 20.86 6.58 20 6.69C20.88 6.16 21.56 5.32 21.88 4.31C21.05 4.81 20.13 5.16 19.16 5.36C18.37 4.5 17.26 4 16 4C13.65 4 11.73 5.92 11.73 8.29C11.73 8.63 11.77 8.96 11.84 9.27C8.28 9.09 5.11 7.38 3 4.79C2.63 5.42 2.42 6.16 2.42 6.94C2.42 8.43 3.17 9.75 4.33 10.5C3.62 10.5 2.96 10.3 2.38 10V10.03C2.38 12.11 3.86 13.85 5.82 14.24C5.46 14.34 5.08 14.39 4.69 14.39C4.42 14.39 4.15 14.36 3.89 14.31C4.43 16 6 17.26 7.89 17.29C6.43 18.45 4.58 19.13 2.56 19.13C2.22 19.13 1.88 19.11 1.54 19.07C3.44 20.29 5.7 21 8.12 21C16 21 20.33 14.46 20.33 8.79C20.33 8.6 20.33 8.42 20.32 8.23C21.16 7.63 21.88 6.87 22.46 6Z" fill="currentColor"/>
+                          </svg>
+                        </a>
+                      </li>
+                    {% endif %}
+                    {% if settings.social_instagram_link != blank %}
+                      <li>
+                        <a href="{{ settings.social_instagram_link }}" class="gr-footer__social-link" aria-label="Instagram">
+                          <svg aria-hidden="true" focusable="false" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2C14.717 2 15.056 2.01 16.122 2.06C17.187 2.11 17.912 2.277 18.55 2.525C19.21 2.779 19.766 3.123 20.322 3.678C20.8305 4.1779 21.224 4.78259 21.475 5.45C21.722 6.087 21.89 6.813 21.94 7.878C21.987 8.944 22 9.283 22 12C22 14.717 21.99 15.056 21.94 16.122C21.89 17.187 21.722 17.912 21.475 18.55C21.2247 19.2178 20.8311 19.8226 20.322 20.322C19.822 20.8303 19.2173 21.2238 18.55 21.475C17.913 21.722 17.187 21.89 16.122 21.94C15.056 21.987 14.717 22 12 22C9.283 22 8.944 21.99 7.878 21.94C6.813 21.89 6.088 21.722 5.45 21.475C4.78233 21.2245 4.17753 20.8309 3.678 20.322C3.16941 19.8222 2.77593 19.2175 2.525 18.55C2.277 17.913 2.11 17.187 2.06 16.122C2.013 15.056 2 14.717 2 12C2 9.283 2.01 8.944 2.06 7.878C2.11 6.812 2.277 6.088 2.525 5.45C2.77524 4.78218 3.1688 4.17732 3.678 3.678C4.17767 3.16923 4.78243 2.77573 5.45 2.525C6.088 2.277 6.812 2.11 7.878 2.06C8.944 2.013 9.283 2 12 2ZM12 7C10.6739 7 9.40215 7.52678 8.46447 8.46447C7.52678 9.40215 7 10.6739 7 12C7 13.3261 7.52678 14.5979 8.46447 15.5355C9.40215 16.4732 10.6739 17 12 17C13.3261 17 14.5979 16.4732 15.5355 15.5355C16.4732 14.5979 17 13.3261 17 12C17 10.6739 16.4732 9.40215 15.5355 8.46447C14.5979 7.52678 13.3261 7 12 7ZM18.5 6.75C18.5 6.41848 18.3683 6.10054 18.1339 5.86612C17.8995 5.6317 17.5815 5.5 17.25 5.5C16.9185 5.5 16.6005 5.6317 16.3661 5.86612C16.1317 6.10054 16 6.41848 16 6.75C16 7.08152 16.1317 7.39946 16.3661 7.63388C16.6005 7.8683 16.9185 8 17.25 8C17.5815 8 17.8995 7.8683 18.1339 7.63388C18.3683 7.39946 18.5 7.08152 18.5 6.75ZM12 9C12.7956 9 13.5587 9.31607 14.1213 9.87868C14.6839 10.4413 15 11.2044 15 12C15 12.7956 14.6839 13.5587 14.1213 14.1213C13.5587 14.6839 12.7956 15 12 15C11.2044 15 10.4413 14.6839 9.87868 14.1213C9.31607 13.5587 9 12.7956 9 12C9 11.2044 9.31607 10.4413 9.87868 9.87868C10.4413 9.31607 11.2044 9 12 9Z" fill="currentColor"/>
+                          </svg>
+                        </a>
+                      </li>
+                    {% endif %}
+                    {% if settings.social_youtube_link != blank %}
+                      <li>
+                        <a href="{{ settings.social_youtube_link }}" class="gr-footer__social-link" aria-label="YouTube">
+                          <svg aria-hidden="true" focusable="false" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M22.54 6.42C22.4212 5.94541 22.1793 5.51057 21.8387 5.15941C21.498 4.80824 21.0708 4.55318 20.6 4.42C18.88 4 12 4 12 4C12 4 5.12 4 3.4 4.46C2.92925 4.59318 2.50198 4.84824 2.16135 5.19941C1.82072 5.55057 1.57879 5.98541 1.46 6.46C1.14522 8.20556 0.991243 9.97631 1 11.75C0.988687 13.537 1.14266 15.3213 1.46 17.08C1.59096 17.5398 1.83831 17.9581 2.17814 18.2945C2.51798 18.6308 2.93882 18.8738 3.4 19C5.12 19.46 12 19.46 12 19.46C12 19.46 18.88 19.46 20.6 19C21.0708 18.8668 21.498 18.6118 21.8387 18.2606C22.1793 17.9094 22.4212 17.4746 22.54 17C22.8524 15.2676 23.0063 13.5103 23 11.75C23.0113 9.96295 22.8573 8.1787 22.54 6.42V6.42Z" fill="currentColor"/>
+                            <path d="M9.75 15.02L15.5 11.75L9.75 8.48001V15.02Z" fill="currentColor"/>
+                          </svg>
+                        </a>
+                      </li>
+                    {% endif %}
+                    {% if settings.social_tiktok_link != blank %}
+                      <li>
+                        <a href="{{ settings.social_tiktok_link }}" class="gr-footer__social-link" aria-label="TikTok">
+                          <svg aria-hidden="true" focusable="false" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M19.59 6.69C18.6795 6.69 17.7973 6.37792 17.0973 5.80274C16.3973 5.22756 15.9217 4.42293 15.75 3.53C15.75 3.53 15.75 3.5 15.75 3.47H12.74V15.91C12.74 16.2726 12.6353 16.6274 12.4387 16.9322C12.242 17.237 11.9617 17.4784 11.6309 17.6308C11.3002 17.7832 10.9327 17.8406 10.5709 17.7961C10.2091 17.7517 9.86814 17.6072 9.58679 17.3799C9.30544 17.1525 9.09411 16.8513 8.97566 16.5094C8.85722 16.1674 8.83619 15.7987 8.91533 15.4461C8.99447 15.0935 9.17033 14.7716 9.42438 14.5172C9.67842 14.2629 10 14.0868 10.35 14H10.74V11H10.35C9.33339 11.0001 8.34489 11.3487 7.53301 11.9935C6.72114 12.6383 6.13352 13.5441 5.86681 14.5669C5.6001 15.5897 5.66884 16.6751 6.06267 17.6518C6.45649 18.6285 7.15234 19.4464 8.04533 19.9894C8.93832 20.5324 9.97912 20.7698 11.0184 20.6693C12.0577 20.5689 13.0373 20.1361 13.8089 19.4357C14.5805 18.7353 15.1025 17.8047 15.3023 16.7831C15.5021 15.7615 15.3682 14.7022 14.92 13.77V13.77V9.15C15.8381 9.76254 16.9045 10.0828 17.9931 10.0723C19.0816 10.0618 20.1414 9.72076 21.05 9.09V6.09C20.5953 6.47788 20.0528 6.7248 19.47 6.8C19.51 6.76 19.55 6.73 19.59 6.69Z" fill="currentColor"/>
+                          </svg>
+                        </a>
+                      </li>
+                    {% endif %}
+                  </ul>
+                </div>
+            {% endcase %}
+          {% endfor %}
+        </div>
+      {% endif %}
+      
+      <div class="gr-footer__bottom">
+        {% if section.settings.show_payment_icons and shop.enabled_payment_types.size > 0 %}
+          <div class="gr-footer__payment">
+            <span class="visually-hidden">{{ 'general.payment.methods' | t }}</span>
+            <ul class="gr-footer__payment-icons">
+              {% for type in shop.enabled_payment_types %}
+                <li class="gr-footer__payment-icon">
+                  {{ type | payment_type_svg_tag }}
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+        
+        <div class="gr-footer__copyright">
+          {% if section.settings.copyright_text != blank %}
+            {{ section.settings.copyright_text }}
+          {% else %}
+            <span>&copy; {{ 'now' | date: '%Y' }} {{ shop.name }}</span>
+          {% endif %}
+          
+          {% if section.settings.show_powered_by %}
+            <span class="gr-footer__powered-by">
+              {{ powered_by_link }}
+            </span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<style>
+.gr-footer {
+  background-color: {{ section.settings.background_color }};
+  color: {{ section.settings.text_color }};
+  padding: {{ section.settings.padding_top }}px 0 {{ section.settings.padding_bottom }}px;
+  {% if section.settings.show_border %}
+    border-top: 1px solid {{ section.settings.border_color }};
+  {% endif %}
+}
+
+.gr-footer__content {
+  display: flex;
+  flex-direction: column;
+}
+
+.gr-footer__blocks {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 30px;
+  margin-bottom: 40px;
+}
+
+@media screen and (min-width: 750px) {
+  .gr-footer__blocks {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media screen and (min-width: 990px) {
+  .gr-footer__blocks {
+    grid-template-columns: repeat({{ section.settings.columns_desktop }}, 1fr);
+  }
+}
+
+.gr-footer__block {
+  margin-bottom: 20px;
+}
+
+.gr-footer__block-title {
+  margin: 0 0 15px;
+  font-size: {{ section.settings.heading_size }}px;
+  font-weight: {{ section.settings.heading_weight }};
+  color: {{ section.settings.heading_color }};
+}
+
+.gr-footer__block-text {
+  font-size: {{ section.settings.text_size }}px;
+  line-height: 1.5;
+}
+
+.gr-footer__menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.gr-footer__menu-link {
+  display: inline-block;
+  padding: 5px 0;
+  color: {{ section.settings.text_color }};
+  text-decoration: none;
+  font-size: {{ section.settings.text_size }}px;
+  transition: color 0.2s ease;
+}
+
+.gr-footer__menu-link:hover {
+  color: {{ section.settings.text_hover_color }};
+}
+
+.gr-footer__newsletter-form {
+  margin-top: 15px;
+}
+
+.gr-footer__newsletter-field {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.gr-footer__newsletter-input {
+  flex-grow: 1;
+  min-width: 200px;
+  padding: 10px 15px;
+  border: 1px solid {{ section.settings.form_border_color }};
+  border-radius: 4px;
+  background-color: {{ section.settings.form_background_color }};
+  color: {{ section.settings.form_text_color }};
+  font-size: 14px;
+}
+
+.gr-footer__newsletter-submit {
+  padding: 10px 20px;
+  background-color: {{ section.settings.button_background_color }};
+  color: {{ section.settings.button_text_color }};
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.gr-footer__newsletter-submit:hover {
+  background-color: {{ section.settings.button_background_hover_color }};
+}
+
+.gr-footer__newsletter-success {
+  margin-top: 10px;
+  color: #28a745;
+}
+
+.gr-footer__newsletter-error {
+  margin-top: 10px;
+  color: #dc3545;
+}
+
+.gr-footer__social-icons {
+  display: flex;
+  flex-wrap: wrap;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  gap: 15px;
+}
+
+.gr-footer__social-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: {{ section.settings.social_background_color }};
+  color: {{ section.settings.social_icon_color }};
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.gr-footer__social-link:hover {
+  background-color: {{ section.settings.social_background_hover_color }};
+  color: {{ section.settings.social_icon_hover_color }};
+}
+
+.gr-footer__bottom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 20px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid {{ section.settings.border_color }};
+  font-size: 14px;
+}
+
+@media screen and (min-width: 750px) {
+  .gr-footer__bottom {
+    flex-direction: row;
+    justify-content: space-between;
+    text-align: left;
+  }
+}
+
+.gr-footer__payment-icons {
+  display: flex;
+  flex-wrap: wrap;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  gap: 10px;
+}
+
+.gr-footer__payment-icon {
+  display: flex;
+  align-items: center;
+}
+
+.gr-footer__payment-icon svg {
+  width: 40px;
+  height: auto;
+}
+
+.gr-footer__copyright {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+@media screen and (min-width: 750px) {
+  .gr-footer__copyright {
+    justify-content: flex-end;
+  }
+}
+
+.gr-footer__powered-by {
+  display: inline-block;
+}
+
+.gr-footer__powered-by a {
+  color: {{ section.settings.text_color }};
+  text-decoration: none;
+}
+
+.gr-footer__powered-by a:hover {
+  text-decoration: underline;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+</style>
+
+{% schema %}
+{
+"name": "GR Footer",
+"settings": [
+  {
+    "type": "color",
+    "id": "background_color",
+    "label": "Color de fondo",
+    "default": "#ffffff"
+  },
+  {
+    "type": "color",
+    "id": "text_color",
+    "label": "Color de texto",
+    "default": "#333333"
+  },
+  {
+    "type": "color",
+    "id": "text_hover_color",
+    "label": "Color de texto al pasar el cursor",
+    "default": "#d29a43"
+  },
+  {
+    "type": "color",
+    "id": "heading_color",
+    "label": "Color de encabezado",
+    "default": "#000000"
+  },
+  {
+    "type": "color",
+    "id": "border_color",
+    "label": "Color de borde",
+    "default": "#e6e6e6"
+  },
+  {
+    "type": "checkbox",
+    "id": "show_border",
+    "label": "Mostrar borde superior",
+    "default": true
+  },
+  {
+    "type": "range",
+    "id": "padding_top",
+    "min": 20,
+    "max": 100,
+    "step": 10,
+    "unit": "px",
+    "label": "Relleno superior",
+    "default": 50
+  },
+  {
+    "type": "range",
+    "id": "padding_bottom",
+    "min": 20,
+    "max": 100,
+    "step": 10,
+    "unit": "px",
+    "label": "Relleno inferior",
+    "default": 30
+  },
+  {
+    "type": "range",
+    "id": "columns_desktop",
+    "min": 1,
+    "max": 4,
+    "step": 1,
+    "label": "Columnas en escritorio",
+    "default": 4
+  },
+  {
+    "type": "range",
+    "id": "heading_size",
+    "min": 14,
+    "max": 24,
+    "step": 1,
+    "unit": "px",
+    "label": "Tamaño de encabezado",
+    "default": 16
+  },
+  {
+    "type": "select",
+    "id": "heading_weight",
+    "label": "Grosor de encabezado",
+    "options": [
+      {
+        "value": "400",
+        "label": "Normal"
+      },
+      {
+        "value": "500",
+        "label": "Medio"
+      },
+      {
+        "value": "600",
+        "label": "Semi-negrita"
+      },
+      {
+        "value": "700",
+        "label": "Negrita"
+      }
+    ],
+    "default": "600"
+  },
+  {
+    "type": "range",
+    "id": "text_size",
+    "min": 12,
+    "max": 18,
+    "step": 1,
+    "unit": "px",
+    "label": "Tamaño de texto",
+    "default": 14
+  },
+  {
+    "type": "header",
+    "content": "Formulario de boletín"
+  },
+  {
+    "type": "color",
+    "id": "form_background_color",
+    "label": "Color de fondo del formulario",
+    "default": "#ffffff"
+  },
+  {
+    "type": "color",
+    "id": "form_text_color",
+    "label": "Color de texto del formulario",
+    "default": "#333333"
+  },
+  {
+    "type": "color",
+    "id": "form_border_color",
+    "label": "Color de borde del formulario",
+    "default": "#e6e6e6"
+  },
+  {
+    "type": "color",
+    "id": "button_background_color",
+    "label": "Color de fondo del botón",
+    "default": "#d29a43"
+  },
+  {
+    "type": "color",
+    "id": "button_text_color",
+    "label": "Color de texto del botón",
+    "default": "#ffffff"
+  },
+  {
+    "type": "color",
+    "id": "button_background_hover_color",
+    "label": "Color de fondo del botón al pasar el cursor",
+    "default": "#b88536"
+  },
+  {
+    "type": "header",
+    "content": "Iconos sociales"
+  },
+  {
+    "type": "color",
+    "id": "social_background_color",
+    "label": "Color de fondo de iconos sociales",
+    "default": "#f5f5f5"
+  },
+  {
+    "type": "color",
+    "id": "social_icon_color",
+    "label": "Color de iconos sociales",
+    "default": "#333333"
+  },
+  {
+    "type": "color",
+    "id": "social_background_hover_color",
+    "label": "Color de fondo de iconos sociales al pasar el cursor",
+    "default": "#d29a43"
+  },
+  {
+    "type": "color",
+    "id": "social_icon_hover_color",
+    "label": "Color de iconos sociales al pasar el cursor",
+    "default": "#ffffff"
+  },
+  {
+    "type": "header",
+    "content": "Pie de página"
+  },
+  {
+    "type": "checkbox",
+    "id": "show_payment_icons",
+    "label": "Mostrar iconos de pago",
+    "default": true
+  },
+  {
+    "type": "text",
+    "id": "copyright_text",
+    "label": "Texto de copyright",
+    "info": "Deja en blanco para usar el año actual y el nombre de la tienda"
+  },
+  {
+    "type": "checkbox",
+    "id": "show_powered_by",
+    "label": "Mostrar 'Powered by Shopify'",
+    "default": true
+  }
+],
+"blocks": [
+  {
+    "type": "text",
+    "name": "Texto",
+    "settings": [
+      {
+        "type": "text",
+        "id": "title",
+        "label": "Título",
+        "default": "Acerca de nosotros"
+      },
+      {
+        "type": "richtext",
+        "id": "text",
+        "label": "Texto",
+        "default": "<p>Comparte información sobre tu tienda, valores o historia.</p>"
+      }
+    ]
+  },
+  {
+    "type": "links",
+    "name": "Enlaces",
+    "settings": [
+      {
+        "type": "text",
+        "id": "title",
+        "label": "Título",
+        "default": "Enlaces rápidos"
+      },
+      {
+        "type": "link_list",
+        "id": "menu",
+        "label": "Menú",
+        "default": "footer"
+      }
+    ]
+  },
+  {
+    "type": "newsletter",
+    "name": "Boletín",
+    "limit": 1,
+    "settings": [
+      {
+        "type": "text",
+        "id": "title",
+        "label": "Título",
+        "default": "Suscríbete a nuestro boletín"
+      },
+      {
+        "type": "richtext",
+        "id": "text",
+        "label": "Texto",
+        "default": "<p>Sé el primero en enterarte de nuestras ofertas y novedades.</p>"
+      },
+      {
+        "type": "text",
+        "id": "button_label",
+        "label": "Texto del botón",
+        "default": "Suscribirse"
+      }
+    ]
+  },
+  {
+    "type": "social",
+    "name": "Redes sociales",
+    "limit": 1,
+    "settings": [
+      {
+        "type": "text",
+        "id": "title",
+        "label": "Título",
+        "default": "Síguenos"
+      }
+    ]
+  }
+],
+"presets": [
+  {
+    "name": "GR Footer",
+    "blocks": [
+      {
+        "type": "text"
+      },
+      {
+        "type": "links"
+      },
+      {
+        "type": "newsletter"
+      },
+      {
+        "type": "social"
+      }
+    ]
+  }
+]
+}
+{% endschema %}

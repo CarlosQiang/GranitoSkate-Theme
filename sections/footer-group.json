@@ -1,0 +1,99 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "name": "t:sections.footer.name",
+  "type": "footer",
+  "sections": {
+    "gr_footer_DDUrnb": {
+      "type": "gr-footer",
+      "blocks": {
+        "text_AgRzhn": {
+          "type": "text",
+          "settings": {
+            "title": "Acerca de nosotros",
+            "text": "<p>Comparte información sobre tu tienda, valores o historia.</p>"
+          }
+        },
+        "links_ePx6EL": {
+          "type": "links",
+          "settings": {
+            "title": "Enlaces rápidos",
+            "menu": "footer"
+          }
+        },
+        "newsletter_XiytQq": {
+          "type": "newsletter",
+          "settings": {
+            "title": "Suscríbete a nuestro boletín",
+            "text": "<p>Sé el primero en enterarte de nuestras ofertas y novedades.</p>",
+            "button_label": "Suscribirse"
+          }
+        },
+        "social_AhVeLE": {
+          "type": "social",
+          "settings": {
+            "title": "Síguenos"
+          }
+        }
+      },
+      "block_order": [
+        "text_AgRzhn",
+        "links_ePx6EL",
+        "newsletter_XiytQq",
+        "social_AhVeLE"
+      ],
+      "name": "GR Footer",
+      "settings": {
+        "background_color": "#ffffff",
+        "text_color": "#333333",
+        "text_hover_color": "#d29a43",
+        "heading_color": "#000000",
+        "border_color": "#e6e6e6",
+        "show_border": true,
+        "padding_top": 50,
+        "padding_bottom": 30,
+        "columns_desktop": 4,
+        "heading_size": 16,
+        "heading_weight": "600",
+        "text_size": 14,
+        "form_background_color": "#ffffff",
+        "form_text_color": "#333333",
+        "form_border_color": "#e6e6e6",
+        "button_background_color": "#d29a43",
+        "button_text_color": "#ffffff",
+        "button_background_hover_color": "#b88536",
+        "social_background_color": "#f5f5f5",
+        "social_icon_color": "#333333",
+        "social_background_hover_color": "#d29a43",
+        "social_icon_hover_color": "#ffffff",
+        "show_payment_icons": true,
+        "copyright_text": "",
+        "show_powered_by": true
+      }
+    },
+    "footer": {
+      "type": "footer",
+      "disabled": true,
+      "settings": {
+        "background_color": "#f5f5f5",
+        "text_color": "#333333",
+        "show_payment_icons": true,
+        "show_social_icons": true,
+        "show_newsletter": true,
+        "newsletter_title": "Subscribe to our newsletter",
+        "newsletter_text": "Sign up for exclusive offers, original stories, events and more."
+      }
+    }
+  },
+  "order": [
+    "gr_footer_DDUrnb",
+    "footer"
+  ]
+}

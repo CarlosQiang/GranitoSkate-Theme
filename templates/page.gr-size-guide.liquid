@@ -1,0 +1,37 @@
+{% layout 'theme' %}
+
+<div class="page-width">
+  <div class="gr-size-guide-page">
+    <header class="gr-size-guide-header">
+      <h1>{{ page.title }}</h1>
+      {% if page.content != blank %}
+        <div class="gr-size-guide-description">
+          {{ page.content }}
+        </div>
+      {% endif %}
+    </header>
+    
+    {% section 'gr-size-guide' %}
+  </div>
+</div>
+
+<style>
+  .gr-size-guide-page {
+    margin: 40px 0;
+  }
+  
+  .gr-size-guide-header {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  
+  .gr-size-guide-header h1 {
+    margin-bottom: 15px;
+    color: {{ settings.gr_color_principal }};
+  }
+  
+  .gr-size-guide-description {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+</style>

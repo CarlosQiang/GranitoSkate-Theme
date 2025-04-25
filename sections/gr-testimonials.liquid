@@ -1,0 +1,405 @@
+{% comment %}
+  Sección de testimonios
+{% endcomment %}
+
+<div class="gr-testimonials-section" id="gr-testimonials-container">
+  <div class="page-width">
+    {% if section.settings.title != blank %}
+      <h2 class="gr-section-title">{{ section.settings.title }}</h2>
+    {% endif %}
+    
+    {% if section.settings.description != blank %}
+      <div class="gr-section-description">{{ section.settings.description }}</div>
+    {% endif %}
+    
+    <div class="gr-testimonials-slider" id="gr-testimonials-slider">
+      {% for block in section.blocks %}
+        <div class="gr-testimonial-slide" {{ block.shopify_attributes }}>
+          <div class="gr-testimonial-content">
+            <div class="gr-testimonial-quote">
+              <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="{{ section.settings.quote_color }}" stroke="none">
+                <path d="M10 11L8 13H10V18H5V13L8 9H10V11ZM18 11L16 13H18V18H13V13L16 9H18V11Z"></path>
+              </svg>
+            </div>
+            
+            <div class="gr-testimonial-text">{{ block.settings.text }}</div>
+            
+            <div class="gr-testimonial-rating">
+              {% assign rating_value = block.settings.rating | default: 5 %}
+              {% for i in (1..5) %}
+                {% if i <= rating_value %}
+                  <span class="gr-star gr-star-filled">★</span>
+                {% else %}
+                  <span class="gr-star">☆</span>
+                {% endif %}
+              {% endfor %}
+            </div>
+            
+            <div class="gr-testimonial-author">
+              <div class="gr-author-image">
+                {% if block.settings.author_image != blank %}
+                  <img src="{{ block.settings.author_image | img_url: 'small' }}" alt="{{ block.settings.author_name }}" loading="lazy">
+                {% else %}
+                  <div class="gr-author-placeholder">{{ block.settings.author_name | slice: 0, 1 }}</div>
+                {% endif %}
+              </div>
+              <div class="gr-author-info">
+                <div class="gr-author-name">{{ block.settings.author_name }}</div>
+                {% if block.settings.author_title != blank %}
+                  <div class="gr-author-title">{{ block.settings.author_title }}</div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+    
+    {% if section.blocks.size > 1 %}
+      <div class="gr-testimonials-nav">
+        <button class="gr-testimonials-prev" aria-label="Anterior">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
+        <div class="gr-testimonials-dots" id="gr-testimonials-dots"></div>
+        <button class="gr-testimonials-next" aria-label="Siguiente">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const slider = document.getElementById('gr-testimonials-slider');
+    const slides = slider.querySelectorAll('.gr-testimonial-slide');
+    const dotsContainer = document.getElementById('gr-testimonials-dots');
+    const prevButton = document.querySelector('.gr-testimonials-prev');
+    const nextButton = document.querySelector('.gr-testimonials-next');
+    
+    if (slides.length <= 1) {
+      return;
+    }
+    
+    let currentSlide = 0;
+    
+    // Crear puntos de navegación
+    slides.forEach((_, index) => {
+      const dot = document.createElement('button');
+      dot.classList.add('gr-testimonial-dot');
+      if (index === 0) {
+        dot.classList.add('active');
+      }
+      dot.setAttribute('aria-label', `Ir al testimonio ${index + 1}`);
+      dot.addEventListener('click', () => goToSlide(index));
+      dotsContainer.appendChild(dot);
+    });
+    
+    // Función para ir a una diapositiva específica
+    function goToSlide(index) {
+      slides.forEach((slide, i) => {
+        slide.style.display = i === index ? 'block' : 'none';
+      });
+      
+      const dots = dotsContainer.querySelectorAll('.gr-testimonial-dot');
+      dots.forEach((dot, i) => {
+        dot.classList.toggle('active', i === index);
+      });
+      
+      currentSlide = index;
+    }
+    
+    // Inicializar el slider
+    goToSlide(0);
+    
+    // Event listeners para los botones de navegación
+    if (prevButton) {
+      prevButton.addEventListener('click', () => {
+        currentSlide = (currentSlide - 1 + slides.length) % slides.length;
+        goToSlide(currentSlide);
+      });
+    }
+    
+    if (nextButton) {
+      nextButton.addEventListener('click', () => {
+        currentSlide = (currentSlide + 1) % slides.length;
+        goToSlide(currentSlide);
+      });
+    }
+    
+    // Autoplay si está habilitado
+    if ({{ section.settings.autoplay | json }}) {
+      const interval = {{ section.settings.autoplay_speed | times: 1000 }};
+      
+      setInterval(() => {
+        currentSlide = (currentSlide + 1) % slides.length;
+        goToSlide(currentSlide);
+      }, interval);
+    }
+  });
+</script>
+
+<style>
+  .gr-testimonials-section {
+    margin: 40px 0;
+  }
+  
+  .gr-section-title {
+    text-align: center;
+    margin-bottom: 10px;
+    color: {{ settings.gr_color_principal }};
+  }
+  
+  .gr-section-description {
+    text-align: center;
+    margin-bottom: 30px;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .gr-testimonials-slider {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  .gr-testimonial-slide {
+    display: none;
+  }
+  
+  .gr-testimonial-slide:first-child {
+    display: block;
+  }
+  
+  .gr-testimonial-content {
+    background-color: {{ section.settings.background_color }};
+    border-radius: 8px;
+    padding: 30px;
+    position: relative;
+    text-align: center;
+  }
+  
+  .gr-testimonial-quote {
+    margin-bottom: 20px;
+  }
+  
+  .gr-testimonial-text {
+    font-size: 1.1em;
+    line-height: 1.6;
+    margin-bottom: 20px;
+    color: {{ section.settings.text_color }};
+  }
+  
+  .gr-testimonial-rating {
+    margin-bottom: 20px;
+    font-size: 1.2em;
+  }
+  
+  .gr-star {
+    color: #ccc;
+  }
+  
+  .gr-star-filled {
+    color: {{ settings.gr_color_principal }};
+  }
+  
+  .gr-testimonial-author {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .gr-author-image {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin-right: 15px;
+  }
+  
+  .gr-author-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .gr-author-placeholder {
+    width: 100%;
+    height: 100%;
+    background-color: {{ settings.gr_color_principal }};
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5em;
+    font-weight: bold;
+  }
+  
+  .gr-author-info {
+    text-align: left;
+  }
+  
+  .gr-author-name {
+    font-weight: bold;
+    color: {{ section.settings.text_color }};
+  }
+  
+  .gr-author-title {
+    font-size: 0.9em;
+    color: {{ section.settings.text_color }};
+    opacity: 0.8;
+  }
+  
+  .gr-testimonials-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 30px;
+  }
+  
+  .gr-testimonials-prev,
+  .gr-testimonials-next {
+    background: none;
+    border: none;
+    color: {{ settings.gr_color_principal }};
+    cursor: pointer;
+    padding: 5px;
+  }
+  
+  .gr-testimonials-dots {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 15px;
+  }
+  
+  .gr-testimonial-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #ccc;
+    border: none;
+    margin: 0 5px;
+    padding: 0;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  
+  .gr-testimonial-dot.active {
+    background-color: {{ settings.gr_color_principal }};
+  }
+</style>
+
+{% schema %}
+{
+  "name": "GR Testimonios",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Título",
+      "default": "Lo que dicen nuestros clientes"
+    },
+    {
+      "type": "textarea",
+      "id": "description",
+      "label": "Descripción"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Color de fondo",
+      "default": "#f5f5f5"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Color del texto",
+      "default": "#333333"
+    },
+    {
+      "type": "color",
+      "id": "quote_color",
+      "label": "Color de las comillas",
+      "default": "#c69c45"
+    },
+    {
+      "type": "checkbox",
+      "id": "autoplay",
+      "label": "Autoplay",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "autoplay_speed",
+      "min": 3,
+      "max": 10,
+      "step": 1,
+      "default": 5,
+      "label": "Velocidad de autoplay (segundos)"
+    }
+  ],
+  "blocks": [
+    {
+      "name": "Testimonio",
+      "type": "testimonial",
+      "settings": [
+        {
+          "type": "textarea",
+          "id": "text",
+          "label": "Texto del testimonio",
+          "default": "Excelente tienda de skate. Los productos son de alta calidad y el servicio al cliente es excepcional. Definitivamente volveré a comprar aquí."
+        },
+        {
+          "type": "range",
+          "id": "rating",
+          "min": 1,
+          "max": 5,
+          "step": 1,
+          "default": 5,
+          "label": "Valoración"
+        },
+        {
+          "type": "text",
+          "id": "author_name",
+          "label": "Nombre del autor",
+          "default": "Juan Pérez"
+        },
+        {
+          "type": "text",
+          "id": "author_title",
+          "label": "Título del autor",
+          "default": "Cliente verificado"
+        },
+        {
+          "type": "image_picker",
+          "id": "author_image",
+          "label": "Imagen del autor"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "GR Testimonios",
+      "blocks": [
+        {
+          "type": "testimonial"
+        },
+        {
+          "type": "testimonial"
+        },
+        {
+          "type": "testimonial"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,65 @@
+{% comment %}
+  Banner dinámico desde la API
+  Uso: {% render 'gr-banner', banner: banner %}
+{% endcomment %}
+
+<div class="gr-banner" style="background-image: url('{{ banner.imagen_url }}');">
+  <div class="gr-banner-content">
+    <h2 class="gr-banner-title">{{ banner.titulo }}</h2>
+    
+    {% if banner.subtitulo %}
+      <div class="gr-banner-subtitle">{{ banner.subtitulo }}</div>
+    {% endif %}
+    
+    {% if banner.enlace %}
+      <a href="{{ banner.enlace }}" class="gr-banner-button">Ver más</a>
+    {% endif %}
+  </div>
+</div>
+
+<style>
+  .gr-banner {
+    position: relative;
+    width: 100%;
+    height: 300px;
+    background-size: cover;
+    background-position: center;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  
+  .gr-banner-content {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 20px;
+    background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+    color: white;
+  }
+  
+  .gr-banner-title {
+    margin-top: 0;
+    margin-bottom: 5px;
+    font-size: 1.8em;
+  }
+  
+  .gr-banner-subtitle {
+    margin-bottom: 15px;
+  }
+  
+  .gr-banner-button {
+    display: inline-block;
+    background-color: {{ settings.gr_color_principal }};
+    color: white;
+    padding: 8px 15px;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: background-color 0.2s ease;
+  }
+  
+  .gr-banner-button:hover {
+    background-color: {{ settings.gr_color_secundario }};
+  }
+</style>

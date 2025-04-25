@@ -1,0 +1,775 @@
+{% comment %}
+Búsqueda avanzada personalizada para GranitoSkate
+{% endcomment %}
+
+<div class="gr-advanced-search" id="gr-advanced-search-container">
+ <div class="page-width">
+   <div class="gr-search-header">
+     <h1 class="gr-search-title">{{ section.settings.title }}</h1>
+     
+     {% if section.settings.description != blank %}
+       <div class="gr-search-description">{{ section.settings.description }}</div>
+     {% endif %}
+   </div>
+
+   <div class="gr-search-form-container">
+     <form action="/search" method="get" class="gr-search-form">
+       <div class="gr-search-input-wrapper">
+         <input 
+           type="search" 
+           name="q" 
+           id="gr-search-input" 
+           class="gr-search-input" 
+           placeholder="{{ section.settings.placeholder }}" 
+           value="{{ search.terms | escape }}"
+           aria-label="{{ section.settings.placeholder }}"
+           autocomplete="off"
+         >
+         <button type="submit" class="gr-search-submit" aria-label="{{ section.settings.submit_text }}">
+           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+             <circle cx="11" cy="11" r="8"></circle>
+             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+           </svg>
+           <span>{{ section.settings.submit_text }}</span>
+         </button>
+       </div>
+       
+       <div class="gr-search-filters">
+         <div class="gr-search-filter">
+           <label for="gr-search-type">{{ section.settings.type_label }}</label>
+           <select id="gr-search-type" name="type">
+             <option value="product" {% if search.types contains 'product' or search.performed == false %}selected{% endif %}>{{ section.settings.product_text }}</option>
+             <option value="article" {% if search.types contains 'article' %}selected{% endif %}>{{ section.settings.article_text }}</option>
+             <option value="page" {% if search.types contains 'page' %}selected{% endif %}>{{ section.settings.page_text }}</option>
+             <option value="collection" {% if search.types contains 'collection' %}selected{% endif %}>{{ section.settings.collection_text }}</option>
+           </select>
+         </div>
+         
+         <div class="gr-search-filter">
+           <label for="gr-search-sort">{{ section.settings.sort_label }}</label>
+           <select id="gr-search-sort" name="sort_by">
+             <option value="relevance" {% if search.sort_by == 'relevance' %}selected{% endif %}>{{ section.settings.relevance_text }}</option>
+             <option value="price-ascending" {% if search.sort_by == 'price-ascending' %}selected{% endif %}>{{ section.settings.price_low_text }}</option>
+             <option value="price-descending" {% if search.sort_by == 'price-descending' %}selected{% endif %}>{{ section.settings.price_high_text }}</option>
+             <option value="title-ascending" {% if search.sort_by == 'title-ascending' %}selected{% endif %}>{{ section.settings.title_az_text }}</option>
+             <option value="title-descending" {% if search.sort_by == 'title-descending' %}selected{% endif %}>{{ section.settings.title_za_text }}</option>
+             <option value="created-ascending" {% if search.sort_by == 'created-ascending' %}selected{% endif %}>{{ section.settings.date_old_text }}</option>
+             <option value="created-descending" {% if search.sort_by == 'created-descending' %}selected{% endif %}>{{ section.settings.date_new_text }}</option>
+           </select>
+         </div>
+         
+         {% if section.settings.show_price_filter %}
+           <div class="gr-search-filter">
+             <label for="gr-search-price-min">{{ section.settings.price_min_label }}</label>
+             <input type="number" id="gr-search-price-min" name="price_min" value="{{ search.filters.price_min }}" min="0" step="1">
+           </div>
+           
+           <div class="gr-search-filter">
+             <label for="gr-search-price-max">{{ section.settings.price_max_label }}</label>
+             <input type="number" id="gr-search-price-max" name="price_max" value="{{ search.filters.price_max }}" min="0" step="1">
+           </div>
+         {% endif %}
+         
+         {% if section.settings.show_vendor_filter and section.settings.enable_vendor_filter %}
+           <div class="gr-search-filter">
+             <label for="gr-search-vendor">{{ section.settings.vendor_label }}</label>
+             <select id="gr-search-vendor" name="vendor">
+               <option value="">{{ section.settings.all_vendors_text }}</option>
+               {% for vendor in shop.vendors %}
+                 <option value="{{ vendor | escape }}" {% if search.filters.vendor == vendor %}selected{% endif %}>{{ vendor }}</option>
+             {% endfor %}
+           </select>
+         </div>
+       {% endif %}
+       
+       {% if section.settings.show_product_type_filter and section.settings.enable_product_type_filter %}
+         <div class="gr-search-filter">
+           <label for="gr-search-product-type">{{ section.settings.product_type_label }}</label>
+           <select id="gr-search-product-type" name="product_type">
+             <option value="">{{ section.settings.all_types_text }}</option>
+             {% for product_type in shop.product_types %}
+               <option value="{{ product_type | escape }}" {% if search.filters.product_type == product_type %}selected{% endif %}>{{ product_type }}</option>
+             {% endfor %}
+           </select>
+         </div>
+       {% endif %}
+       
+       {% if section.settings.show_tag_filter and section.settings.enable_tag_filter %}
+         <div class="gr-search-filter">
+           <label for="gr-search-tag">{{ section.settings.tag_label }}</label>
+           <select id="gr-search-tag" name="tag">
+             <option value="">{{ section.settings.all_tags_text }}</option>
+             {% for tag in shop.tags %}
+               <option value="{{ tag | escape }}" {% if search.filters.tag == tag %}selected{% endif %}>{{ tag }}</option>
+             {% endfor %}
+           </select>
+         </div>
+       {% endif %}
+     </div>
+   </form>
+ </div>
+
+ {% if search.performed %}
+   <div class="gr-search-results">
+     <div class="gr-search-results-header">
+       <h2 class="gr-search-results-title">
+         {% if search.results_count > 0 %}
+           {{ section.settings.results_text | replace: '[count]', search.results_count | replace: '[terms]', search.terms }}
+         {% else %}
+           {{ section.settings.no_results_text | replace: '[terms]', search.terms }}
+         {% endif %}
+       </h2>
+     </div>
+     
+     {% if search.results_count > 0 %}
+       <div class="gr-search-results-grid">
+         {% paginate search.results by 12 %}
+           {% for item in search.results %}
+             <div class="gr-search-result-item">
+               {% if item.object_type == 'product' %}
+                 <a href="{{ item.url }}" class="gr-search-result-link">
+                   <div class="gr-search-result-image">
+                     {% if item.featured_image %}
+                       <img src="{{ item.featured_image | img_url: '300x300', crop: 'center' }}" 
+                           alt="{{ item.title | escape }}">
+                     {% else %}
+                       <div class="gr-search-result-no-image">
+                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                           <circle cx="11" cy="11" r="8"></circle>
+                           <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                         </svg>
+                       </div>
+                     {% endif %}
+                   </div>
+                   <div class="gr-search-result-info">
+                     <h3 class="gr-search-result-title">{{ item.title }}</h3>
+                     <div class="gr-search-result-price">
+                       {% if item.price_varies %}
+                         <span class="gr-search-result-price-from">{{ section.settings.from_text }}</span>
+                         {{ item.price_min | money }}
+                       {% else %}
+                         {{ item.price | money }}
+                       {% endif %}
+                     </div>
+                     {% if item.vendor != blank and section.settings.show_vendor %}
+                       <div class="gr-search-result-vendor">{{ item.vendor }}</div>
+                     {% endif %}
+                   </div>
+                 </a>
+               {% else %}
+                 <a href="{{ item.url }}" class="gr-search-result-link">
+                   <div class="gr-search-result-info gr-search-result-info-full">
+                     <div class="gr-search-result-type">{{ item.object_type | capitalize }}</div>
+                     <h3 class="gr-search-result-title">{{ item.title }}</h3>
+                     {% if item.object_type == 'article' and section.settings.show_article_date %}
+                       <div class="gr-search-result-date">{{ item.published_at | date: format: 'date' }}</div>
+                     {% endif %}
+                     {% if section.settings.show_excerpt %}
+                       <div class="gr-search-result-excerpt">{{ item.content | strip_html | truncatewords: 30 }}</div>
+                     {% endif %}
+                   </div>
+                 </a>
+               {% endif %}
+             </div>
+           {% endfor %}
+         
+           {% if paginate.pages > 1 %}
+             <div class="gr-search-pagination">
+               {{ paginate | default_pagination }}
+             </div>
+           {% endif %}
+         {% endpaginate %}
+       </div>
+     {% else %}
+       <div class="gr-search-no-results">
+         <div class="gr-search-no-results-icon">
+           <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+             <circle cx="11" cy="11" r="8"></circle>
+             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+             <line x1="8" y1="11" x2="14" y2="11"></line>
+           </svg>
+         </div>
+         <p class="gr-search-no-results-text">{{ section.settings.no_results_message }}</p>
+         <a href="/collections/all" class="gr-button">{{ section.settings.browse_text }}</a>
+       </div>
+     {% endif %}
+   </div>
+ {% endif %}
+</div>
+</div>
+
+<style>
+.gr-advanced-search {
+ margin: 40px 0;
+}
+
+.gr-search-header {
+ margin-bottom: 30px;
+ text-align: center;
+}
+
+.gr-search-title {
+ margin-top: 0;
+ margin-bottom: 10px;
+ color: {{ settings.gr_color_principal }};
+}
+
+.gr-search-description {
+ max-width: 800px;
+ margin: 0 auto;
+}
+
+.gr-search-form-container {
+ margin-bottom: 40px;
+ padding: 30px;
+ border: 1px solid #e5e5e5;
+ border-radius: 8px;
+}
+
+.gr-search-input-wrapper {
+ display: flex;
+ margin-bottom: 20px;
+}
+
+.gr-search-input {
+ flex: 1;
+ padding: 12px 15px;
+ border: 1px solid #e5e5e5;
+ border-right: none;
+ border-radius: 4px 0 0 4px;
+ font-size: 1em;
+}
+
+.gr-search-submit {
+ display: flex;
+ align-items: center;
+ padding: 0 20px;
+ background-color: {{ settings.gr_color_principal }};
+ color: white;
+ border: none;
+ border-radius: 0 4px 4px 0;
+ cursor: pointer;
+ transition: background-color 0.2s ease;
+}
+
+.gr-search-submit:hover {
+ background-color: {{ settings.gr_color_secundario }};
+}
+
+.gr-search-submit svg {
+ margin-right: 8px;
+}
+
+.gr-search-filters {
+ display: grid;
+ grid-template-columns: repeat(1, 1fr);
+ gap: 15px;
+}
+
+@media screen and (min-width: 750px) {
+ .gr-search-filters {
+   grid-template-columns: repeat(2, 1fr);
+ }
+}
+
+@media screen and (min-width: 990px) {
+ .gr-search-filters {
+   grid-template-columns: repeat(3, 1fr);
+ }
+}
+
+.gr-search-filter label {
+ display: block;
+ margin-bottom: 5px;
+ font-size: 0.9em;
+}
+
+.gr-search-filter select,
+.gr-search-filter input {
+ width: 100%;
+ padding: 10px;
+ border: 1px solid #e5e5e5;
+ border-radius: 4px;
+}
+
+.gr-search-results-header {
+ margin-bottom: 30px;
+}
+
+.gr-search-results-title {
+ margin-top: 0;
+ margin-bottom: 0;
+ color: {{ settings.gr_color_principal }};
+}
+
+.gr-search-results-grid {
+ display: grid;
+ grid-template-columns: repeat(1, 1fr);
+ gap: 20px;
+ margin-bottom: 40px;
+}
+
+@media screen and (min-width: 750px) {
+ .gr-search-results-grid {
+   grid-template-columns: repeat(2, 1fr);
+ }
+}
+
+@media screen and (min-width: 990px) {
+ .gr-search-results-grid {
+   grid-template-columns: repeat(3, 1fr);
+ }
+}
+
+.gr-search-result-item {
+ border: 1px solid #e5e5e5;
+ border-radius: 8px;
+ overflow: hidden;
+ transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.gr-search-result-item:hover {
+ transform: translateY(-5px);
+ box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.gr-search-result-link {
+ display: flex;
+ flex-direction: column;
+ height: 100%;
+ text-decoration: none;
+ color: {{ section.settings.text_color }};
+}
+
+.gr-search-result-image {
+ height: 200px;
+ overflow: hidden;
+}
+
+.gr-search-result-image img {
+ width: 100%;
+ height: 100%;
+ object-fit: cover;
+}
+
+.gr-search-result-no-image {
+ width: 100%;
+ height: 100%;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ background-color: #f5f5f5;
+ color: #ccc;
+}
+
+.gr-search-result-info {
+ padding: 15px;
+ flex-grow: 1;
+ display: flex;
+ flex-direction: column;
+}
+
+.gr-search-result-info-full {
+height: 100%;
+}
+
+.gr-search-result-type {
+display: inline-block;
+padding: 3px 8px;
+background-color: #f5f5f5;
+border-radius: 4px;
+font-size: 0.8em;
+margin-bottom: 10px;
+}
+
+.gr-search-result-title {
+margin-top: 0;
+margin-bottom: 10px;
+font-size: 1.1em;
+}
+
+.gr-search-result-price {
+margin-bottom: 10px;
+font-weight: bold;
+color: {{ settings.gr_color_principal }};
+}
+
+.gr-search-result-price-from {
+font-weight: normal;
+color: #777;
+font-size: 0.9em;
+}
+
+.gr-search-result-vendor {
+font-size: 0.9em;
+color: #777;
+}
+
+.gr-search-result-date {
+font-size: 0.9em;
+color: #777;
+margin-bottom: 10px;
+}
+
+.gr-search-result-excerpt {
+font-size: 0.9em;
+color: #777;
+margin-top: auto;
+}
+
+.gr-search-pagination {
+display: flex;
+justify-content: center;
+align-items: center;
+margin-top: 40px;
+}
+
+.gr-pagination-prev,
+.gr-pagination-next {
+display: flex;
+align-items: center;
+color: {{ settings.gr_color_principal }};
+text-decoration: none;
+}
+
+.gr-pagination-prev svg {
+margin-right: 5px;
+}
+
+.gr-pagination-next svg {
+margin-left: 5px;
+}
+
+.gr-pagination-info {
+margin: 0 15px;
+}
+
+.gr-search-no-results {
+text-align: center;
+padding: 40px 0;
+}
+
+.gr-search-no-results-icon {
+margin-bottom: 20px;
+color: #ccc;
+}
+
+.gr-search-no-results-text {
+margin-bottom: 20px;
+color: #777;
+}
+
+.gr-button {
+display: inline-block;
+background-color: {{ settings.gr_color_principal }};
+color: white;
+padding: 10px 20px;
+border-radius: 4px;
+text-decoration: none;
+transition: background-color 0.2s ease;
+}
+
+.gr-button:hover {
+background-color: {{ settings.gr_color_secundario }};
+}
+</style>
+
+{% schema %}
+{
+"name": "GR Búsqueda avanzada",
+"tag": "section",
+"class": "section-search",
+"settings": [
+{
+ "type": "header",
+ "content": "Configuración general"
+},
+{
+ "type": "text",
+ "id": "title",
+ "label": "Título",
+ "default": "Búsqueda avanzada"
+},
+{
+ "type": "richtext",
+ "id": "description",
+ "label": "Descripción",
+ "default": "<p>Utiliza los filtros para encontrar exactamente lo que estás buscando.</p>"
+},
+{
+ "type": "color",
+ "id": "text_color",
+ "label": "Color del texto",
+ "default": "#333333"
+},
+{
+ "type": "header",
+ "content": "Formulario de búsqueda"
+},
+{
+ "type": "text",
+ "id": "placeholder",
+ "label": "Placeholder del campo de búsqueda",
+ "default": "¿Qué estás buscando?"
+},
+{
+ "type": "text",
+ "id": "submit_text",
+ "label": "Texto del botón buscar",
+ "default": "Buscar"
+},
+{
+ "type": "text",
+ "id": "type_label",
+ "label": "Etiqueta del tipo de búsqueda",
+ "default": "Buscar en"
+},
+{
+ "type": "text",
+ "id": "product_text",
+ "label": "Texto para productos",
+ "default": "Productos"
+},
+{
+ "type": "text",
+ "id": "article_text",
+ "label": "Texto para artículos",
+ "default": "Artículos"
+},
+{
+ "type": "text",
+ "id": "page_text",
+ "label": "Texto para páginas",
+ "default": "Páginas"
+},
+{
+ "type": "text",
+ "id": "collection_text",
+ "label": "Texto para colecciones",
+ "default": "Colecciones"
+},
+{
+ "type": "text",
+ "id": "sort_label",
+ "label": "Etiqueta de ordenación",
+ "default": "Ordenar por"
+},
+{
+ "type": "text",
+ "id": "relevance_text",
+ "label": "Texto para relevancia",
+ "default": "Relevancia"
+},
+{
+ "type": "text",
+ "id": "price_low_text",
+ "label": "Texto para precio ascendente",
+ "default": "Precio: menor a mayor"
+},
+{
+ "type": "text",
+ "id": "price_high_text",
+ "label": "Texto para precio descendente",
+ "default": "Precio: mayor a menor"
+},
+{
+ "type": "text",
+ "id": "title_az_text",
+ "label": "Texto para título A-Z",
+ "default": "Título: A-Z"
+},
+{
+ "type": "text",
+ "id": "title_za_text",
+ "label": "Texto para título Z-A",
+ "default": "Título: Z-A"
+},
+{
+ "type": "text",
+ "id": "date_old_text",
+ "label": "Texto para fecha ascendente",
+ "default": "Fecha: antiguo a reciente"
+},
+{
+ "type": "text",
+ "id": "date_new_text",
+ "label": "Texto para fecha descendente",
+ "default": "Fecha: reciente a antiguo"
+},
+{
+ "type": "header",
+ "content": "Filtros adicionales"
+},
+{
+ "type": "checkbox",
+ "id": "show_price_filter",
+ "label": "Mostrar filtro de precio",
+ "default": true
+},
+{
+ "type": "text",
+ "id": "price_min_label",
+ "label": "Etiqueta de precio mínimo"
+},
+{
+ "type": "text",
+ "id": "price_max_label",
+ "label": "Etiqueta de precio máximo"
+},
+{
+ "type": "checkbox",
+ "id": "show_vendor_filter",
+ "label": "Mostrar filtro de fabricante",
+ "default": true
+},
+{
+ "type": "checkbox",
+ "id": "enable_vendor_filter",
+ "label": "Habilitar filtro de fabricante",
+ "default": true,
+ "info": "Puede afectar al rendimiento en tiendas con muchos fabricantes"
+},
+{
+ "type": "text",
+ "id": "vendor_label",
+ "label": "Etiqueta de fabricante",
+ "default": "Fabricante"
+},
+{
+ "type": "text",
+ "id": "all_vendors_text",
+ "label": "Texto para todos los fabricantes",
+ "default": "Todos los fabricantes"
+},
+{
+ "type": "checkbox",
+ "id": "show_product_type_filter",
+ "label": "Mostrar filtro de tipo de producto",
+ "default": true
+},
+{
+ "type": "checkbox",
+ "id": "enable_product_type_filter",
+ "label": "Habilitar filtro de tipo de producto",
+ "default": true,
+ "info": "Puede afectar al rendimiento en tiendas con muchos tipos de productos"
+},
+{
+ "type": "text",
+ "id": "product_type_label",
+ "label": "Etiqueta de tipo de producto",
+ "default": "Tipo de producto"
+},
+{
+ "type": "text",
+ "id": "all_types_text",
+ "label": "Texto para todos los tipos",
+ "default": "Todos los tipos"
+},
+{
+ "type": "checkbox",
+ "id": "show_tag_filter",
+ "label": "Mostrar filtro de etiquetas",
+ "default": false
+},
+{
+ "type": "checkbox",
+ "id": "enable_tag_filter",
+ "label": "Habilitar filtro de etiquetas",
+ "default": false,
+ "info": "Puede afectar al rendimiento en tiendas con muchas etiquetas"
+},
+{
+ "type": "text",
+ "id": "tag_label",
+ "label": "Etiqueta de etiquetas",
+ "default": "Etiqueta"
+},
+{
+ "type": "text",
+ "id": "all_tags_text",
+ "label": "Texto para todas las etiquetas",
+ "default": "Todas las etiquetas"
+},
+{
+ "type": "header",
+ "content": "Resultados de búsqueda"
+},
+{
+ "type": "text",
+ "id": "results_text",
+ "label": "Texto de resultados",
+ "default": "[count] resultados para \"[terms]\""
+},
+{
+ "type": "text",
+ "id": "no_results_text",
+ "label": "Texto de sin resultados",
+ "default": "No se encontraron resultados para \"[terms]\""
+},
+{
+ "type": "text",
+ "id": "no_results_message",
+ "label": "Mensaje de sin resultados",
+ "default": "Intenta con otra búsqueda o explora nuestros productos."
+},
+{
+ "type": "text",
+ "id": "browse_text",
+ "label": "Texto del botón explorar",
+ "default": "Explorar productos"
+},
+{
+ "type": "text",
+ "id": "from_text",
+ "label": "Texto para 'desde'",
+ "default": "Desde"
+},
+{
+ "type": "checkbox",
+ "id": "show_vendor",
+ "label": "Mostrar fabricante en resultados",
+ "default": true
+},
+{
+ "type": "checkbox",
+ "id": "show_article_date",
+ "label": "Mostrar fecha de artículos",
+ "default": true
+},
+{
+ "type": "checkbox",
+ "id": "show_excerpt",
+ "label": "Mostrar extracto",
+ "default": true
+},
+{
+ "type": "header",
+ "content": "Paginación"
+},
+{
+ "type": "text",
+ "id": "prev_text",
+ "label": "Texto de anterior",
+ "default": "Anterior"
+},
+{
+ "type": "text",
+ "id": "next_text",
+ "label": "Texto de siguiente",
+ "default": "Siguiente"
+},
+{
+ "type": "text",
+ "id": "pagination_text",
+ "label": "Texto de página",
+ "default": "Página [current] de [total]"
+}
+],
+"presets": [
+{
+ "name": "GR Búsqueda avanzada"
+}
+]
+}
+{% endschema %}

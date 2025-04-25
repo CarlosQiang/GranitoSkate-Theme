@@ -1,0 +1,599 @@
+{% comment %}
+  @name: GR Barra de Anuncios
+  @description: Barra de anuncios personalizable con colores de marca y conexión a API
+  @author: v0
+{% endcomment %}
+
+<div class="gr-announcement-bar" 
+  data-section-id="{{ section.id }}" 
+  data-section-type="announcement-bar" 
+  data-api-url="{{ section.settings.api_url }}"
+  data-api-enabled="{{ section.settings.use_api }}"
+  style="min-height: {{ section.settings.banner_height }}px;">
+  <div class="page-width">
+    <div class="gr-announcement-slider" id="gr-announcement-slider-{{ section.id }}">
+      <div class="gr-announcement-loading" id="gr-announcement-loading-{{ section.id }}">
+        <div class="gr-announcement-loading-spinner"></div>
+      </div>
+      
+      <div id="gr-announcement-api-content-{{ section.id }}">
+        <!-- API content will be loaded here -->
+      </div>
+      
+      <div id="gr-announcement-static-content-{{ section.id }}" {% if section.settings.use_api %}style="display: none;"{% endif %}>
+        {% for block in section.blocks %}
+          <div class="gr-announcement-slide" {{ block.shopify_attributes }}>
+            {% if block.settings.link != blank %}
+              <a href="{{ block.settings.link }}" class="gr-announcement-link">
+            {% endif %}
+            
+            {% if block.settings.icon != blank %}
+              <span class="gr-announcement-icon">
+                {% case block.settings.icon %}
+                  {% when 'truck' %}
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M16 3H1V16H16V3Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M16 8H20L23 11V16H16V8Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M5.5 21C6.88071 21 8 19.8807 8 18.5C8 17.1193 6.88071 16 5.5 16C4.11929 16 3 17.1193 3 18.5C3 19.8807 4.11929 21 5.5 21Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M18.5 21C19.8807 21 21 19.8807 21 18.5C21 17.1193 19.8807 16 18.5 16C17.1193 16 16 17.1193 16 18.5C16 19.8807 17.1193 21 18.5 21Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  {% when 'tag' %}
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M20.59 13.41L13.42 20.58C13.2343 20.766 13.0137 20.9135 12.7709 21.0141C12.5281 21.1148 12.2678 21.1666 12.005 21.1666C11.7422 21.1666 11.4819 21.1148 11.2391 21.0141C10.9963 20.9135 10.7757 20.766 10.59 20.58L2 12V2H12L20.59 10.59C20.9625 10.9647 21.1716 11.4716 21.1716 12C21.1716 12.5284 20.9625 13.0353 20.59 13.41V13.41Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M7 7H7.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  {% when 'info' %}
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M12 16V12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M12 8H12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                {% endcase %}
+              </span>
+            {% endif %}
+            
+            <span class="gr-announcement-text">{{ block.settings.text }}</span>
+            
+            {% if block.settings.link != blank %}
+              </a>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  {% if section.settings.show_close_button %}
+    <button type="button" class="gr-announcement-close" aria-label="Cerrar" data-announcement-close>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+  {% endif %}
+</div>
+
+<style>
+.gr-announcement-bar {
+  position: relative;
+  background-color: {{ section.settings.background_color }};
+  color: {{ section.settings.text_color }};
+  padding: 10px 0;
+  font-size: {{ section.settings.font_size }}px;
+  text-align: {{ section.settings.text_alignment }};
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  {% if section.settings.show_border %}
+    border-bottom: 1px solid {{ section.settings.border_color }};
+  {% endif %}
+}
+
+.gr-announcement-slider {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+}
+
+.gr-announcement-slide {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  position: absolute;
+  width: 100%;
+  transition: opacity 0.5s ease;
+}
+
+.gr-announcement-slide.active {
+  opacity: 1;
+  position: relative;
+}
+
+.gr-announcement-link {
+  color: {{ section.settings.text_color }};
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gr-announcement-link:hover {
+  text-decoration: underline;
+}
+
+.gr-announcement-icon {
+  display: inline-flex;
+  margin-right: 8px;
+  color: {{ section.settings.icon_color }};
+}
+
+.gr-announcement-text {
+  font-weight: {{ section.settings.font_weight }};
+  {% if section.settings.text_transform != 'none' %}
+    text-transform: {{ section.settings.text_transform }};
+  {% endif %}
+}
+
+.gr-announcement-close {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  padding: 5px;
+  cursor: pointer;
+  color: {{ section.settings.text_color }};
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.gr-announcement-close:hover {
+  opacity: 1;
+}
+
+.gr-announcement-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+}
+
+.gr-announcement-loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: {{ section.settings.text_color }};
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.gr-announcement-error {
+  text-align: center;
+  padding: 10px;
+  color: {{ section.settings.text_color }};
+  opacity: 0.8;
+}
+
+@media screen and (max-width: 749px) {
+  .gr-announcement-bar {
+    font-size: {{ section.settings.font_size | minus: 1 }}px;
+    padding: 8px 0;
+  }
+  
+  .gr-announcement-close {
+    right: 5px;
+  }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const announcementBar = document.querySelector('.gr-announcement-bar');
+  const sliderId = 'gr-announcement-slider-{{ section.id }}';
+  const slider = document.getElementById(sliderId);
+  const apiEnabled = announcementBar.getAttribute('data-api-enabled') === 'true';
+  const apiUrl = announcementBar.getAttribute('data-api-url');
+  const loadingElement = document.getElementById('gr-announcement-loading-{{ section.id }}');
+  const apiContentElement = document.getElementById('gr-announcement-api-content-{{ section.id }}');
+  const staticContentElement = document.getElementById('gr-announcement-static-content-{{ section.id }}');
+  
+  // Function to initialize the slider with static content
+  function initStaticSlider() {
+    const slides = staticContentElement.querySelectorAll('.gr-announcement-slide');
+    
+    // If there's only one slide, make it active and exit
+    if (slides.length <= 1) {
+      if (slides.length === 1) {
+        slides[0].classList.add('active');
+      }
+      return;
+    }
+    
+    // Initialize the first slide as active
+    slides[0].classList.add('active');
+    
+    // Set up rotation if enabled
+    {% if section.settings.auto_rotate %}
+      let currentIndex = 0;
+      
+      setInterval(() => {
+        slides[currentIndex].classList.remove('active');
+        currentIndex = (currentIndex + 1) % slides.length;
+        slides[currentIndex].classList.add('active');
+      }, {{ section.settings.rotation_interval | times: 1000 }});
+    {% endif %}
+  }
+  
+  // Function to create announcement slides from API data
+  function createAnnouncementSlides(announcements) {
+    if (!announcements || announcements.length === 0) {
+      apiContentElement.innerHTML = '<div class="gr-announcement-error">No hay anuncios disponibles</div>';
+      return;
+    }
+    
+    let slidesHTML = '';
+    
+    announcements.forEach((announcement, index) => {
+      const isActive = index === 0 ? 'active' : '';
+      const iconHTML = announcement.icon ? `
+        <span class="gr-announcement-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            ${getIconPath(announcement.icon)}
+          </svg>
+        </span>
+      ` : '';
+      
+      const linkStart = announcement.link ? `<a href="${announcement.link}" class="gr-announcement-link">` : '';
+      const linkEnd = announcement.link ? '</a>' : '';
+      
+      slidesHTML += `
+        <div class="gr-announcement-slide ${isActive}">
+          ${linkStart}
+          ${iconHTML}
+          <span class="gr-announcement-text">${announcement.text}</span>
+          ${linkEnd}
+        </div>
+      `;
+    });
+    
+    apiContentElement.innerHTML = slidesHTML;
+    
+    // Set up rotation if enabled
+    {% if section.settings.auto_rotate %}
+      const apiSlides = apiContentElement.querySelectorAll('.gr-announcement-slide');
+      if (apiSlides.length > 1) {
+        let currentIndex = 0;
+        
+        setInterval(() => {
+          apiSlides[currentIndex].classList.remove('active');
+          currentIndex = (currentIndex + 1) % apiSlides.length;
+          apiSlides[currentIndex].classList.add('active');
+        }, {{ section.settings.rotation_interval | times: 1000 }});
+      }
+    {% endif %}
+  }
+  
+  // Helper function to get icon SVG path
+  function getIconPath(iconName) {
+    switch(iconName) {
+      case 'truck':
+        return `
+          <path d="M16 3H1V16H16V3Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M16 8H20L23 11V16H16V8Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M5.5 21C6.88071 21 8 19.8807 8 18.5C8 17.1193 6.88071 16 5.5 16C4.11929 16 3 17.1193 3 18.5C3 19.8807 4.11929 21 5.5 21Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M18.5 21C19.8807 21 21 19.8807 21 18.5C21 17.1193 19.8807 16 18.5 16C17.1193 16 16 17.1193 16 18.5C16 19.8807 17.1193 21 18.5 21Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        `;
+      case 'tag':
+        return `
+          <path d="M20.59 13.41L13.42 20.58C13.2343 20.766 13.0137 20.9135 12.7709 21.0141C12.5281 21.1148 12.2678 21.1666 12.005 21.1666C11.7422 21.1666 11.4819 21.1148 11.2391 21.0141C10.9963 20.9135 10.7757 20.766 10.59 20.58L2 12V2H12L20.59 10.59C20.9625 10.9647 21.1716 11.4716 21.1716 12C21.1716 12.5284 20.9625 13.0353 20.59 13.41V13.41Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M7 7H7.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        `;
+      case 'info':
+        return `
+          <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M12 16V12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M12 8H12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        `;
+      default:
+        return '';
+    }
+  }
+  
+  // Fetch announcements from API
+  if (apiEnabled && apiUrl) {
+    loadingElement.style.display = 'flex';
+    staticContentElement.style.display = 'none';
+    
+    fetch(apiUrl)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then(data => {
+        loadingElement.style.display = 'none';
+        createAnnouncementSlides(data.announcements || data);
+      })
+      .catch(error => {
+        console.error('Error fetching announcements:', error);
+        loadingElement.style.display = 'none';
+        apiContentElement.innerHTML = '<div class="gr-announcement-error">Error al cargar los anuncios</div>';
+        
+        // Fallback to static content if API fails
+        if (staticContentElement.querySelectorAll('.gr-announcement-slide').length > 0) {
+          staticContentElement.style.display = 'block';
+          initStaticSlider();
+        }
+      });
+  } else {
+    // Use static content
+    loadingElement.style.display = 'none';
+    staticContentElement.style.display = 'block';
+    initStaticSlider();
+  }
+  
+  // Close button functionality
+  {% if section.settings.show_close_button %}
+    const closeButton = document.querySelector('[data-announcement-close]');
+    if (closeButton) {
+      closeButton.addEventListener('click', function() {
+        const announcementBar = this.closest('.gr-announcement-bar');
+        announcementBar.style.display = 'none';
+        
+        // Store in session storage to keep it closed during session
+        sessionStorage.setItem('announcement-closed-{{ section.id }}', 'true');
+      });
+      
+      // Check if previously closed
+      if (sessionStorage.getItem('announcement-closed-{{ section.id }}') === 'true') {
+        document.querySelector('.gr-announcement-bar').style.display = 'none';
+      }
+    }
+  {% endif %}
+});
+</script>
+
+{% schema %}
+{
+"name": "GR Barra de Anuncios",
+"settings": [
+  {
+    "type": "header",
+    "content": "Configuración de API"
+  },
+  {
+    "type": "checkbox",
+    "id": "use_api",
+    "label": "Usar API para anuncios",
+    "default": false,
+    "info": "Si está activado, los anuncios se cargarán desde la API en lugar de usar los bloques estáticos"
+  },
+  {
+    "type": "text",
+    "id": "api_url",
+    "label": "URL de la API",
+    "default": "https://example.com/api",
+    "info": "URL completa de la API que proporciona los anuncios"
+  },
+  {
+    "type": "header",
+    "content": "Configuración general"
+  },
+  {
+    "type": "range",
+    "id": "banner_height",
+    "min": 30,
+    "max": 100,
+    "step": 5,
+    "unit": "px",
+    "label": "Altura del banner",
+    "default": 40
+  },
+  {
+    "type": "color",
+    "id": "background_color",
+    "label": "Color de fondo",
+    "default": "#d29a43"
+  },
+  {
+    "type": "color",
+    "id": "text_color",
+    "label": "Color de texto",
+    "default": "#ffffff"
+  },
+  {
+    "type": "color",
+    "id": "icon_color",
+    "label": "Color de iconos",
+    "default": "#ffffff"
+  },
+  {
+    "type": "range",
+    "id": "font_size",
+    "min": 12,
+    "max": 18,
+    "step": 1,
+    "unit": "px",
+    "label": "Tamaño de fuente",
+    "default": 14
+  },
+  {
+    "type": "select",
+    "id": "font_weight",
+    "label": "Grosor de fuente",
+    "options": [
+      {
+        "value": "400",
+        "label": "Normal"
+      },
+      {
+        "value": "500",
+        "label": "Medio"
+      },
+      {
+        "value": "600",
+        "label": "Semi-negrita"
+      },
+      {
+        "value": "700",
+        "label": "Negrita"
+      }
+    ],
+    "default": "400"
+  },
+  {
+    "type": "select",
+    "id": "text_transform",
+    "label": "Transformación de texto",
+    "options": [
+      {
+        "value": "none",
+        "label": "Ninguna"
+      },
+      {
+        "value": "uppercase",
+        "label": "Mayúsculas"
+      },
+      {
+        "value": "lowercase",
+        "label": "Minúsculas"
+      },
+      {
+        "value": "capitalize",
+        "label": "Capitalizar"
+      }
+    ],
+    "default": "none"
+  },
+  {
+    "type": "select",
+    "id": "text_alignment",
+    "label": "Alineación de texto",
+    "options": [
+      {
+        "value": "left",
+        "label": "Izquierda"
+      },
+      {
+        "value": "center",
+        "label": "Centro"
+      },
+      {
+        "value": "right",
+        "label": "Derecha"
+      }
+    ],
+    "default": "center"
+  },
+  {
+    "type": "checkbox",
+    "id": "show_border",
+    "label": "Mostrar borde inferior",
+    "default": false
+  },
+  {
+    "type": "color",
+    "id": "border_color",
+    "label": "Color de borde",
+    "default": "rgba(255,255,255,0.2)"
+  },
+  {
+    "type": "checkbox",
+    "id": "auto_rotate",
+    "label": "Rotar anuncios automáticamente",
+    "default": true
+  },
+  {
+    "type": "range",
+    "id": "rotation_interval",
+    "min": 3,
+    "max": 10,
+    "step": 1,
+    "unit": "s",
+    "label": "Intervalo de rotación",
+    "default": 5
+  },
+  {
+    "type": "checkbox",
+    "id": "show_close_button",
+    "label": "Mostrar botón de cerrar",
+    "default": true
+  }
+],
+"blocks": [
+  {
+    "type": "announcement",
+    "name": "Anuncio",
+    "settings": [
+      {
+        "type": "text",
+        "id": "text",
+        "label": "Texto",
+        "default": "Anuncia algo importante aquí"
+      },
+      {
+        "type": "url",
+        "id": "link",
+        "label": "Enlace"
+      },
+      {
+        "type": "select",
+        "id": "icon",
+        "label": "Icono",
+        "options": [
+          {
+            "value": "",
+            "label": "Ninguno"
+          },
+          {
+            "value": "truck",
+            "label": "Envío"
+          },
+          {
+            "value": "tag",
+            "label": "Etiqueta"
+          },
+          {
+            "value": "info",
+            "label": "Información"
+          }
+        ],
+        "default": ""
+      }
+    ]
+  }
+],
+"presets": [
+  {
+    "name": "GR Barra de Anuncios",
+    "blocks": [
+      {
+        "type": "announcement",
+        "settings": {
+          "text": "Envío gratis en pedidos superiores a 50€",
+          "icon": "truck"
+        }
+      },
+      {
+        "type": "announcement",
+        "settings": {
+          "text": "¡Nueva colección disponible!",
+          "icon": "tag"
+        }
+      }
+    ]
+  }
+]
+}
+{% endschema %}

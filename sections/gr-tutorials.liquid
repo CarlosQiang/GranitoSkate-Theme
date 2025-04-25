@@ -1,0 +1,409 @@
+{% comment %}
+  Sección de tutoriales de skate
+{% endcomment %}
+
+<div class="gr-tutorials-section py-12">
+  <div class="page-width">
+    {% if section.settings.title != blank %}
+      <h2 class="gr-section-title">{{ section.settings.title }}</h2>
+    {% endif %}
+    
+    {% if section.settings.description != blank %}
+      <div class="gr-section-description">{{ section.settings.description }}</div>
+    {% endif %}
+    
+    {% if section.settings.show_filter %}
+      <div class="gr-tutorials-filter flex justify-center mb-6">
+        <label for="gr-tutorials-filter-select" class="mr-2 text-sm font-medium text-gray-700">Filtrar por:</label>
+        <select id="gr-tutorials-filter-select" class="gr-tutorials-filter-select rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+          <option value="all">Todos los tutoriales</option>
+          <option value="principiante">Principiante</option>
+          <option value="intermedio">Intermedio</option>
+          <option value="avanzado">Avanzado</option>
+        </select>
+      </div>
+    {% endif %}
+    
+    <div class="gr-tutorials-loading text-center text-gray-500">Cargando tutoriales...</div>
+    
+    <div class="gr-tutorials-grid hidden grid-cols-1 sm:grid-cols-2 lg:grid-cols-{{ section.settings.columns_desktop }} gap-6">
+      &lt;!-- Los tutoriales se cargarán aquí dinámicamente -->
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const tutorialsContainer = document.getElementById('gr-tutorials-container');
+    const loadingElement = tutorialsContainer.querySelector('.gr-tutorials-loading');
+    const tutorialsGrid = tutorialsContainer.querySelector('.gr-tutorials-grid');
+    const filterSelect = document.getElementById('gr-tutorials-filter-select');
+    
+    let allTutorials = [];
+    
+    const loadTutorials = () => {
+      if (window.granitoAPI) {
+        // Cargar tutoriales desde la API
+        window.granitoAPI.getTutorials()
+          .then(response => {
+            loadingElement.style.display = 'none';
+            
+            if (response.error) {
+              tutorialsGrid.innerHTML = '<p>Error al cargar los tutoriales.</p>';
+              tutorialsGrid.style.display = 'block';
+              return;
+            }
+            
+            if (response.length === 0) {
+              tutorialsGrid.innerHTML = '<p>No hay tutoriales disponibles.</p>';
+              tutorialsGrid.style.display = 'block';
+              return;
+            }
+            
+            allTutorials = response;
+            renderTutorials(allTutorials);
+          })
+          .catch(error => {
+            console.error('Error al cargar tutoriales:', error);
+            loadingElement.textContent = 'Error al cargar los tutoriales.';
+          });
+      } else {
+        // Si la API no está disponible, mostrar tutoriales estáticos de ejemplo
+        loadingElement.style.display = 'none';
+        
+        // Datos de ejemplo
+        allTutorials = [
+          {% for block in section.blocks %}
+            {
+              id: '{{ block.id }}',
+              titulo: '{{ block.settings.titulo }}',
+              descripcion: '{{ block.settings.descripcion }}',
+              nivel: '{{ block.settings.nivel }}',
+              video_url: '{{ block.settings.video_url }}',
+              imagen_url: '{{ block.settings.imagen | img_url: "master" }}'
+            }{% unless forloop.last %},{% endunless %}
+          {% endfor %}
+        ];
+        
+        if (allTutorials.length === 0) {
+          tutorialsGrid.innerHTML = '<p>No hay tutoriales disponibles.</p>';
+          tutorialsGrid.style.display = 'block';
+          return;
+        }
+        
+        renderTutorials(allTutorials);
+      }
+    };
+    
+    const renderTutorials = (tutorials) => {
+      // Crear HTML para cada tutorial
+      let tutorialsHTML = '';
+      
+      tutorials.forEach(tutorial => {
+        tutorialsHTML += `
+          <div class="gr-tutorial-card border border-gray-200 rounded-lg overflow-hidden shadow-md transition-transform transform hover:translate-y-[-5px] hover:shadow-lg" data-level="${tutorial.nivel || 'all'}">
+            <a href="/pages/tutorial?id=${tutorial.id}" class="gr-tutorial-link block">
+              <div class="gr-tutorial-image relative pb-[56.25%] overflow-hidden">
+                ${tutorial.video_url ? `
+                  <div class="gr-tutorial-play-button absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 text-white bg-black bg-opacity-50 rounded-full w-15 h-15 flex items-center justify-center transition-colors hover:bg-indigo-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <polygon points="10 8 16 12 10 16 10 8"></polygon>
+                    </svg>
+                  </div>
+                ` : ''}
+                <img src="${tutorial.imagen_url || '/placeholder.svg?height=300&width=400'}" alt="${tutorial.titulo}" loading="lazy" class="absolute top-0 left-0 w-full h-full object-cover transition-transform transform hover:scale-110">
+              </div>
+              <div class="gr-tutorial-info p-4">
+                <h3 class="gr-tutorial-title text-xl font-semibold">${tutorial.titulo}</h3>
+                ${tutorial.descripcion ? `<p class="gr-tutorial-description text-gray-600">${tutorial.descripcion}</p>` : ''}
+                ${tutorial.nivel ? `<span class="gr-tutorial-level gr-level-${tutorial.nivel.toLowerCase()} inline-block py-1 px-2 rounded-md text-xs uppercase">${tutorial.nivel}</span>` : ''}
+              </div>
+            </a>
+          </div>
+        `;
+      });
+      
+      tutorialsGrid.innerHTML = tutorialsHTML;
+      tutorialsGrid.style.display = 'grid';
+    };
+    
+    // Filtrar tutoriales
+    if (filterSelect) {
+      filterSelect.addEventListener('change', function() {
+        const selectedLevel = this.value;
+        
+        if (selectedLevel === 'all') {
+          renderTutorials(allTutorials);
+        } else {
+          const filteredTutorials = allTutorials.filter(tutorial => tutorial.nivel && tutorial.nivel.toLowerCase() === selectedLevel);
+          renderTutorials(filteredTutorials);
+        }
+      });
+    }
+    
+    // Cargar tutoriales
+    loadTutorials();
+  });
+</script>
+
+<style>
+  .gr-tutorials-section {
+    margin: 40px 0;
+  }
+  
+  .gr-section-title {
+    text-align: center;
+    margin-bottom: 10px;
+    color: {{ settings.gr_color_principal }};
+  }
+  
+  .gr-section-description {
+    text-align: center;
+    margin-bottom: 30px;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .gr-tutorials-filter {
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  
+  .gr-tutorials-filter-select {
+    padding: 8px;
+    border: 1px solid #e5e5e5;
+    border-radius: 4px;
+    margin-left: 10px;
+  }
+  
+  .gr-tutorials-loading {
+    text-align: center;
+    padding: 20px;
+  }
+  
+  .gr-tutorials-grid {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 20px;
+  }
+  
+  @media screen and (min-width: 750px) {
+    .gr-tutorials-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  @media screen and (min-width: 990px) {
+    .gr-tutorials-grid {
+      grid-template-columns: repeat({{ section.settings.columns_desktop }}, 1fr);
+    }
+  }
+  
+  .gr-tutorial-card {
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .gr-tutorial-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  .gr-tutorial-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+  }
+  
+  .gr-tutorial-image {
+    width: 100%;
+    padding-top: 56.25%; /* 16:9 aspect ratio */
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .gr-tutorial-image img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+  
+  .gr-tutorial-card:hover .gr-tutorial-image img {
+    transform: scale(1.05);
+  }
+  
+  .gr-tutorial-play-button {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+    color: white;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s ease;
+  }
+  
+  .gr-tutorial-card:hover .gr-tutorial-play-button {
+    background-color: {{ settings.gr_color_principal }};
+  }
+  
+  .gr-tutorial-info {
+    padding: 15px;
+    position: relative;
+  }
+  
+  .gr-tutorial-title {
+    margin: 0 0 5px;
+    font-size: 1.2em;
+  }
+  
+  .gr-tutorial-description {
+    margin: 0 0 10px;
+    font-size: 0.9em;
+    color: #777;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  .gr-tutorial-level {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    text-transform: uppercase;
+  }
+  
+  .gr-level-principiante {
+    background-color: #4CAF50;
+    color: white;
+  }
+  
+  .gr-level-intermedio {
+    background-color: #2196F3;
+    color: white;
+  }
+  
+  .gr-level-avanzado {
+    background-color: #F44336;
+    color: white;
+  }
+</style>
+
+{% schema %}
+{
+  "name": "GR Tutoriales",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Título",
+      "default": "Tutoriales de Skate"
+    },
+    {
+      "type": "textarea",
+      "id": "description",
+      "label": "Descripción",
+      "default": "Aprende nuevos trucos con nuestros tutoriales"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_filter",
+      "label": "Mostrar filtro por nivel",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "columns_desktop",
+      "min": 1,
+      "max": 4,
+      "step": 1,
+      "default": 3,
+      "label": "Columnas en escritorio"
+    }
+  ],
+  "blocks": [
+    {
+      "name": "Tutorial",
+      "type": "tutorial",
+      "settings": [
+        {
+          "type": "text",
+          "id": "titulo",
+          "label": "Título",
+          "default": "Cómo hacer un Ollie"
+        },
+        {
+          "type": "textarea",
+          "id": "descripcion",
+          "label": "Descripción",
+          "default": "Aprende el truco básico del skateboarding"
+        },
+        {
+          "type": "select",
+          "id": "nivel",
+          "label": "Nivel",
+          "options": [
+            {
+              "value": "principiante",
+              "label": "Principiante"
+            },
+            {
+              "value": "intermedio",
+              "label": "Intermedio"
+            },
+            {
+              "value": "avanzado",
+              "label": "Avanzado"
+            }
+          ],
+          "default": "principiante"
+        },
+        {
+          "type": "url",
+          "id": "video_url",
+          "label": "URL del video"
+        },
+        {
+          "type": "image_picker",
+          "id": "imagen",
+          "label": "Imagen"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "GR Tutoriales",
+      "blocks": [
+        {
+          "type": "tutorial"
+        },
+        {
+          "type": "tutorial"
+        },
+        {
+          "type": "tutorial"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

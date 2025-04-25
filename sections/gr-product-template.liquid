@@ -1,0 +1,396 @@
+<div class="page-width">
+  <div class="product-template" id="ProductSection-{{ section.id }}" data-section-id="{{ section.id }}" data-section-type="product" data-enable-history-state="true">
+    {%- assign current_variant = product.selected_or_first_available_variant -%}
+    {%- assign featured_image = current_variant.featured_image | default: product.featured_image -%}
+
+    <div class="product-template__container">
+      {% comment %}
+        Product Gallery
+      {% endcomment %}
+      <div class="product-gallery">
+        <div class="product-gallery__main">
+          {% for image in product.images %}
+            <div class="product-gallery__image{% if forloop.first %} active{% endif %}" data-image-id="{{ image.id }}">
+              <img src="{{ image | img_url: 'grande' }}" alt="{{ image.alt | escape }}" data-product-image>
+            </div>
+          {% endfor %}
+        </div>
+        
+        {% if product.images.size > 1 %}
+          <div class="product-gallery__thumbnails">
+            {% for image in product.images %}
+              <div class="product-gallery__thumbnail{% if forloop.first %} active{% endif %}" data-thumbnail-id="{{ image.id }}">
+                <img src="{{ image | img_url: 'compact' }}" alt="{{ image.alt | escape }}">
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+
+      {% comment %}
+        Product Info
+      {% endcomment %}
+      <div class="product-info">
+        <h1 class="product-title">{{ product.title }}</h1>
+        
+        {% if product.vendor %}
+          <p class="product-vendor">{{ product.vendor }}</p>
+        {% endif %}
+        
+        <div class="product-price">
+          <span class="product-price__regular{% if current_variant.compare_at_price > current_variant.price %} on-sale{% endif %}">
+            {{ current_variant.price | money }}
+          </span>
+          
+          {% if current_variant.compare_at_price > current_variant.price %}
+            <span class="product-price__compare">{{ current_variant.compare_at_price | money }}</span>
+            <span class="product-price__discount">
+              {% assign discount_percentage = current_variant.compare_at_price | minus: current_variant.price | times: 100 | divided_by: current_variant.compare_at_price %}
+              {{ discount_percentage }}% de descuento
+            </span>
+          {% endif %}
+        </div>
+        
+        {% form 'product', product, id: 'AddToCartForm', class: 'product-form' %}
+          {% comment %}
+            Variant Selector
+          {% endcomment %}
+          {% unless product.has_only_default_variant %}
+            <div class="product-form__variants">
+              {% for option in product.options_with_values %}
+                <div class="product-form__option">
+                  <label class="product-form__option-label" for="Option-{{ section.id }}-{{ forloop.index0 }}">
+                    {{ option.name }}
+                  </label>
+                  
+                  <select
+                    id="Option-{{ section.id }}-{{ forloop.index0 }}"
+                    class="product-form__option-select"
+                    name="options[{{ option.name | escape }}]"
+                    data-option-index="{{ forloop.index0 }}"
+                  >
+                    {% for value in option.values %}
+                      <option
+                        value="{{ value | escape }}"
+                        {% if option.selected_value == value %}selected="selected"{% endif %}
+                      >
+                        {{ value }}
+                      </option>
+                    {% endfor %}
+                  </select>
+                </div>
+              {% endfor %}
+            </div>
+          {% endunless %}
+          
+          {% comment %}
+            Quantity Selector
+          {% endcomment %}
+          <div class="product-form__quantity">
+            <label for="Quantity-{{ section.id }}">Cantidad</label>
+            <div class="quantity-input">
+              <button type="button" class="quantity-input__button quantity-input__button--minus">-</button>
+              <input
+                type="number"
+                id="Quantity-{{ section.id }}"
+                name="quantity"
+                value="1"
+                min="1"
+                aria-label="Cantidad"
+                class="quantity-input__field"
+              >
+              <button type="button" class="quantity-input__button quantity-input__button--plus">+</button>
+            </div>
+          </div>
+          
+          {% comment %}
+            Add to Cart Button
+          {% endcomment %}
+          <div class="product-form__buttons">
+            <button
+              type="submit"
+              name="add"
+              class="product-form__add-button"
+              {% unless current_variant.available %}disabled="disabled"{% endunless %}
+            >
+              <span class="product-form__add-button-text">
+                {% if current_variant.available %}
+                  Añadir al carrito
+                {% else %}
+                  Agotado
+                {% endif %}
+              </span>
+            </button>
+            
+            {% comment %}
+              Wishlist Button
+            {% endcomment %}
+            <button 
+              type="button" 
+              class="add-to-wishlist" 
+              data-product-id="{{ product.id }}" 
+              data-product-name="{{ product.title }}"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+              </svg>
+              <span class="wishlist-text">Añadir a favoritos</span>
+            </button>
+          </div>
+          
+          {% comment %}
+            Hidden Variant Selector
+          {% endcomment %}
+          <select name="id" id="ProductSelect-{{ section.id }}" class="product-form__variants no-js hidden">
+            {% for variant in product.variants %}
+              <option
+                {% if variant == current_variant %}selected="selected"{% endif %}
+                {% unless variant.available %}disabled="disabled"{% endunless %}
+                value="{{ variant.id }}"
+              >
+                {{ variant.title }} - {{ variant.price | money }}
+              </option>
+            {% endfor %}
+          </select>
+        {% endform %}
+        
+        {% comment %}
+          Product Description Tabs
+        {% endcomment %}
+        <div class="product-tabs">
+          <div class="product-tabs__headers">
+            <button class="product-tabs__header active" data-tab="description">Descripción</button>
+            <button class="product-tabs__header" data-tab="specs">Especificaciones</button>
+            <button class="product-tabs__header" data-tab="reviews">Reseñas</button>
+          </div>
+          
+          <div class="product-tabs__content">
+            <div class="product-tabs__panel active" data-tab-content="description">
+              <div class="rte">
+                {{ product.description }}
+              </div>
+            </div>
+            
+            <div class="product-tabs__panel" data-tab-content="specs">
+              <table class="product-specs">
+                {% for tag in product.tags %}
+                  {% if tag contains ':' %}
+                    {% assign tag_parts = tag | split: ':' %}
+                    <tr>
+                      <th>{{ tag_parts[0] | strip }}</th>
+                      <td>{{ tag_parts[1] | strip }}</td>
+                    </tr>
+                  {% endif %}
+                {% endfor %}
+                
+                {% if product.metafields.specs %}
+                  {% for spec in product.metafields.specs %}
+                    <tr>
+                      <th>{{ spec.first }}</th>
+                      <td>{{ spec.last }}</td>
+                    </tr>
+                  {% endfor %}
+                {% endif %}
+              </table>
+            </div>
+            
+            <div class="product-tabs__panel" data-tab-content="reviews">
+              <div id="product-reviews" data-product-id="{{ product.id }}"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    {% comment %}
+      Related Products
+    {% endcomment %}
+    {% if section.settings.show_related_products %}
+      <div class="related-products">
+        <h2 class="related-products__title">También te puede interesar</h2>
+        <div class="related-products__grid">
+          {% assign related_limit = section.settings.related_products_limit %}
+          {% assign related_collection = collections[section.settings.related_products_collection] %}
+          
+          {% if related_collection == empty or related_collection.products.size == 0 %}
+            {% assign related_collection = product.collections.first %}
+          {% endif %}
+          
+          {% if related_collection != empty %}
+            {% for related_product in related_collection.products limit: related_limit %}
+              {% if related_product.id != product.id %}
+                <div class="related-product">
+                  <a href="{{ related_product.url }}" class="related-product__link">
+                    <div class="related-product__image">
+                      <img src="{{ related_product.featured_image | img_url: 'medium' }}" alt="{{ related_product.featured_image.alt | escape }}">
+                    </div>
+                    <div class="related-product__info">
+                      <h3 class="related-product__title">{{ related_product.title }}</h3>
+                      <p class="related-product__price">{{ related_product.price | money }}</p>
+                    </div>
+                  </a>
+                </div>
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Galería de imágenes
+    const mainImages = document.querySelectorAll('.product-gallery__image');
+    const thumbnails = document.querySelectorAll('.product-gallery__thumbnail');
+    
+    thumbnails.forEach(thumbnail => {
+      thumbnail.addEventListener('click', function() {
+        const imageId = this.getAttribute('data-thumbnail-id');
+        
+        // Actualizar miniaturas activas
+        thumbnails.forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+        
+        // Actualizar imagen principal
+        mainImages.forEach(image => {
+          image.classList.remove('active');
+          if (image.getAttribute('data-image-id') === imageId) {
+            image.classList.add('active');
+          }
+        });
+      });
+    });
+    
+    // Selector de cantidad
+    const quantityInput = document.querySelector('.quantity-input__field');
+    const minusButton = document.querySelector('.quantity-input__button--minus');
+    const plusButton = document.querySelector('.quantity-input__button--plus');
+    
+    if (minusButton && plusButton && quantityInput) {
+      minusButton.addEventListener('click', function() {
+        const currentValue = parseInt(quantityInput.value);
+        if (currentValue > 1) {
+          quantityInput.value = currentValue - 1;
+        }
+      });
+      
+      plusButton.addEventListener('click', function() {
+        const currentValue = parseInt(quantityInput.value);
+        quantityInput.value = currentValue + 1;
+      });
+    }
+    
+    // Pestañas de producto
+    const tabHeaders = document.querySelectorAll('.product-tabs__header');
+    const tabPanels = document.querySelectorAll('.product-tabs__panel');
+    
+    tabHeaders.forEach(header => {
+      header.addEventListener('click', function() {
+        const tabName = this.getAttribute('data-tab');
+        
+        // Actualizar pestañas activas
+        tabHeaders.forEach(h => h.classList.remove('active'));
+        this.classList.add('active');
+        
+        // Actualizar paneles activos
+        tabPanels.forEach(panel => {
+          panel.classList.remove('active');
+          if (panel.getAttribute('data-tab-content') === tabName) {
+            panel.classList.add('active');
+          }
+        });
+      });
+    });
+    
+    // Selector de variantes
+    const variantSelectors = document.querySelectorAll('.product-form__option-select');
+    const variantIdSelector = document.getElementById('ProductSelect-{{ section.id }}');
+    
+    if (variantSelectors.length > 0 && variantIdSelector) {
+      variantSelectors.forEach(selector => {
+        selector.addEventListener('change', function() {
+          // Obtener las opciones seleccionadas
+          const selectedOptions = [];
+          variantSelectors.forEach(s => selectedOptions.push(s.value));
+          
+          // Buscar la variante correspondiente
+          const variants = {{ product.variants | json }};
+          const matchedVariant = variants.find(variant => {
+            return variant.options.every((option, index) => option === selectedOptions[index]);
+          });
+          
+          if (matchedVariant) {
+            // Actualizar el selector de variantes oculto
+            variantIdSelector.value = matchedVariant.id;
+            
+            // Actualizar el precio
+            const priceElement = document.querySelector('.product-price__regular');
+            if (priceElement) {
+              priceElement.textContent = formatMoney(matchedVariant.price);
+            }
+            
+            // Actualizar el botón de añadir al carrito
+            const addButton = document.querySelector('.product-form__add-button');
+            const addButtonText = addButton.querySelector('.product-form__add-button-text');
+            
+            if (matchedVariant.available) {
+              addButton.disabled = false;
+              addButtonText.textContent = 'Añadir al carrito';
+            } else {
+              addButton.disabled = true;
+              addButtonText.textContent = 'Agotado';
+            }
+          }
+        });
+      });
+    }
+    
+    // Función para formatear precios
+    function formatMoney(cents) {
+      const moneyFormat = {{ shop.money_format | json }};
+      const value = (cents / 100).toFixed(2);
+      return moneyFormat.replace(/{{amount}}/, value);
+    }
+  });
+</script>
+
+{% schema %}
+{
+  "name": "Plantilla de producto",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "show_related_products",
+      "label": "Mostrar productos relacionados",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "related_products_title",
+      "label": "Título de productos relacionados",
+      "default": "También te puede interesar"
+    },
+    {
+      "type": "collection",
+      "id": "related_products_collection",
+      "label": "Colección de productos relacionados"
+    },
+    {
+      "type": "range",
+      "id": "related_products_limit",
+      "min": 2,
+      "max": 12,
+      "step": 1,
+      "default": 4,
+      "label": "Límite de productos relacionados"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Plantilla de producto"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,327 @@
+{% comment %}
+ Mapa interactivo de spots de skate
+ - Muestra spots de skate en un mapa interactivo
+ - Permite filtrar por tipo de spot, dificultad y características
+ - Integra con la API para obtener datos de spots
+{% endcomment %}
+
+<div class="gr-spots-map" id="grSpotsMap">
+ <div class="gr-section-header">
+   <h2>{{ section.settings.title | escape }}</h2>
+   <p>{{ section.settings.subtitle | escape }}</p>
+ </div>
+
+ <div class="gr-map-controls">
+   <div class="gr-map-filters">
+     <select class="gr-select gr-spot-type-filter">
+       <option value="">Todos los tipos</option>
+       <option value="park">Skateparks</option>
+       <option value="street">Spots callejeros</option>
+       <option value="bowl">Bowls</option>
+       <option value="vert">Rampas</option>
+     </select>
+     
+     <select class="gr-select gr-spot-difficulty-filter">
+       <option value="">Todas las dificultades</option>
+       <option value="beginner">Principiante</option>
+       <option value="intermediate">Intermedio</option>
+       <option value="advanced">Avanzado</option>
+       <option value="pro">Profesional</option>
+     </select>
+     
+     <div class="gr-spot-features-filter">
+       <span>Características:</span>
+       <label><input type="checkbox" value="rails"> Rails</label>
+       <label><input type="checkbox" value="stairs"> Escaleras</label>
+       <label><input type="checkbox" value="ledges"> Bordillos</label>
+       <label><input type="checkbox" value="gaps"> Gaps</label>
+       <label><input type="checkbox" value="transitions"> Transiciones</label>
+     </div>
+     
+     <button class="gr-btn gr-btn-secondary gr-reset-filters">Resetear filtros</button>
+   </div>
+   
+   <div class="gr-map-search">
+     <input type="text" placeholder="Buscar por ubicación..." class="gr-input gr-location-search">
+     <button class="gr-btn gr-btn-icon gr-search-btn" aria-label="Buscar">
+       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+     </button>
+     <button class="gr-btn gr-btn-icon gr-geolocate-btn" aria-label="Usar mi ubicación">
+       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><point cx="12" cy="12" r="1"></point></svg>
+     </button>
+   </div>
+ </div>
+
+ <div class="gr-map-container">
+   <div id="grMap" class="gr-map"></div>
+   <div class="gr-map-loading">
+     <div class="gr-spinner"></div>
+     <p>Cargando mapa...</p>
+   </div>
+ </div>
+
+ <div class="gr-spot-details" id="grSpotDetails">
+   <div class="gr-no-spot-selected">
+     <p>Selecciona un spot para ver detalles</p>
+   </div>
+ </div>
+
+ <template id="grSpotTemplate">
+   <div class="gr-spot-card">
+     <div class="gr-spot-header">
+       <h3 class="gr-spot-name"></h3>
+       <div class="gr-spot-rating"></div>
+     </div>
+     
+     <div class="gr-spot-images"></div>
+     
+     <div class="gr-spot-info">
+       <p class="gr-spot-address"></p>
+       <div class="gr-spot-features"></div>
+       <div class="gr-spot-description"></div>
+       
+       <div class="gr-spot-meta">
+         <span class="gr-spot-difficulty"></span>
+         <span class="gr-spot-type"></span>
+       </div>
+       
+       <div class="gr-spot-actions">
+         <button class="gr-btn gr-btn-primary gr-spot-directions">Cómo llegar</button>
+         <button class="gr-btn gr-btn-secondary gr-spot-save">Guardar</button>
+         <button class="gr-btn gr-btn-secondary gr-spot-share">Compartir</button>
+       </div>
+     </div>
+     
+     <div class="gr-spot-reviews">
+       <h4>Reseñas</h4>
+       <div class="gr-spot-reviews-list"></div>
+       <button class="gr-btn gr-btn-text gr-add-review">Añadir reseña</button>
+     </div>
+   </div>
+ </template>
+</div>
+
+<script>
+ document.addEventListener('DOMContentLoaded', function() {
+   const apiUrl = '{{ shop.metafields.granito.api_url }}';
+   const mapContainer = document.getElementById('grSpotsMap');
+   const mapElement = document.getElementById('grMap');
+   const spotDetails = document.getElementById('grSpotDetails');
+   const typeFilter = mapContainer.querySelector('.gr-spot-type-filter');
+   const difficultyFilter = mapContainer.querySelector('.gr-spot-difficulty-filter');
+   const featureCheckboxes = mapContainer.querySelectorAll('.gr-spot-features-filter input');
+   const resetFiltersBtn = mapContainer.querySelector('.gr-reset-filters');
+   const locationSearch = mapContainer.querySelector('.gr-location-search');
+   const searchBtn = mapContainer.querySelector('.gr-search-btn');
+   const geolocateBtn = mapContainer.querySelector('.gr-geolocate-btn');
+   
+   let map;
+   let markers = [];
+   let spots = [];
+   
+   // Inicializar mapa
+   function initMap() {
+     // Cargar Google Maps API si no está ya cargada
+     if (typeof google === 'undefined' || typeof google.maps === 'undefined') {
+       const script = document.createElement('script');
+       script.src = `https://maps.googleapis.com/maps/api/js?key={{ section.settings.google_maps_api_key }}&libraries=places`;
+       script.defer = true;
+       script.async = true;
+       script.onload = createMap;
+       document.head.appendChild(script);
+     } else {
+       createMap();
+     }
+   }
+   
+   // Crear mapa
+   function createMap() {
+     // Ubicación inicial (España)
+     const initialLocation = { lat: 40.416775, lng: -3.703790 };
+     
+     // Opciones del mapa
+     const mapOptions = {
+       center: initialLocation,
+       zoom: 6,
+       mapTypeId: google.maps.MapTypeId.ROADMAP,
+       mapTypeControl: true,
+       mapTypeControlOptions: {
+         style: google.maps.MapTypeControlStyle.DROPDOWN_MENU
+       },
+       streetViewControl: true,
+       fullscreenControl: true
+     };
+     
+     // Crear mapa
+     map = new google.maps.Map(mapElement, mapOptions);
+     
+     // Ocultar spinner de carga
+     mapContainer.querySelector('.gr-map-loading').style.display = 'none';
+     
+     // Cargar spots
+     fetchSpots();
+     
+     // Configurar eventos
+     setupEventListeners();
+   }
+   
+   // Configurar eventos
+   function setupEventListeners() {
+     // Filtros
+     typeFilter.addEventListener('change', filterSpots);
+     difficultyFilter.addEventListener('change', filterSpots);
+     
+     featureCheckboxes.forEach(checkbox => {
+       checkbox.addEventListener('change', filterSpots);
+     });
+     
+     resetFiltersBtn.addEventListener('click', resetFilters);
+     
+     // Búsqueda
+     searchBtn.addEventListener('click', searchLocation);
+     locationSearch.addEventListener('keypress', function(e) {
+       if (e.key === 'Enter') {
+         searchLocation();
+       }
+     });
+     
+     // Geolocalización
+     geolocateBtn.addEventListener('click', getUserLocation);
+   }
+   
+   // Obtener spots de la API
+   function fetchSpots() {
+     fetch(`${apiUrl}/spots`)
+       .then(response => response.json())
+       .then(data => {
+         spots = data.spots || [];
+         addSpotsToMap(spots);
+       })
+       .catch(error => {
+         console.error('Error al cargar spots:', error);
+         mapElement.innerHTML = '<div class="gr-map-error">Error al cargar los spots. Por favor, inténtalo de nuevo más tarde.</div>';
+       });
+   }
+   
+   // Añadir spots al mapa
+   function addSpotsToMap(spots) {
+     // Limpiar marcadores existentes
+     clearMarkers();
+     
+     // Añadir nuevos marcadores
+     spots.forEach(spot => {
+       const marker = new google.maps.Marker({
+         position: { lat: spot.latitude, lng: spot.longitude },
+         map: map,
+         title: spot.name,
+         icon: getMarkerIcon(spot.type)
+       });
+       
+       // Añadir evento click
+       marker.addListener('click', () => {
+         showSpotDetails(spot);
+       });
+       
+       // Guardar referencia al marcador
+       markers.push(marker);
+     });
+     
+     // Ajustar mapa para mostrar todos los marcadores si hay alguno
+     if (markers.length > 0) {
+       fitMapToMarkers();
+     }
+   }
+   
+   // Obtener icono de marcador según tipo de spot
+   function getMarkerIcon(type) {
+     const iconBase = '{{ "gr-map-marker-" | asset_url }}';
+     
+     switch (type) {
+       case 'park':
+         return `${iconBase}park.png`;
+       case 'street':
+         return `${iconBase}street.png`;
+       case 'bowl':
+         return `${iconBase}bowl.png`;
+       case 'vert':
+         return `${iconBase}vert.png`;
+       default:
+         return `${iconBase}default.png`;
+     }
+   }
+   
+   // Limpiar marcadores
+   function clearMarkers() {
+     markers.forEach(marker => {
+       marker.setMap(null);
+     });
+     markers = [];
+   }
+   
+   // Ajustar mapa para mostrar todos los marcadores
+   function fitMapToMarkers() {
+     const bounds = new google.maps.LatLngBounds();
+     
+     markers.forEach(marker => {
+       bounds.extend(marker.getPosition());
+     });
+     
+     map.fitBounds(bounds);
+     
+     // Zoom out un poco si solo hay un marcador
+     if (markers.length === 1) {
+       const listener = google.maps.event.addListener(map, 'idle', function() {
+         map.setZoom(15);
+         google.maps.event.removeListener(listener);
+       });
+     }
+   }
+   
+   // Filtrar spots
+   function filterSpots() {
+     const type = typeFilter.value;
+     const difficulty = difficultyFilter.value;
+     const features = Array.from(featureCheckboxes)
+       .filter(cb => cb.checked)
+       .map(cb => cb.value);
+     
+     const filteredSpots = spots.filter(spot => {
+       // Filtrar por tipo
+       if (type && spot.type !== type) {
+         return false;
+       }
+       
+       // Filtrar por dificultad
+       if (difficulty && spot.difficulty !== difficulty) {
+         return false;
+       }
+       
+       // Filtrar por características
+       if (features.length > 0) {
+         // Verificar que el spot tenga todas las características seleccionadas
+         return features.every(feature => spot.features.includes(feature));
+       }
+       
+       return true;
+     });
+     
+     // Actualizar mapa con spots filtrados
+     addSpotsToMap(filteredSpots);
+   }
+   
+   // Resetear filtros
+   function resetFilters() {
+     typeFilter.value = '';
+     difficultyFilter.value = '';
+     
+     featureCheckboxes.forEach(checkbox => {
+       checkbox.checked = false;
+     });
+     
+     // Mostrar todos los spots
+     addSpotsToMap(spots);
+   }
+   
+   // Buscar ubicación
+   function searchLocation() {
+     const query = locationSearch.value.trim();

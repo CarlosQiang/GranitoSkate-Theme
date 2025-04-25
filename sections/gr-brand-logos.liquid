@@ -1,0 +1,191 @@
+{% comment %}
+  Sección de logos de marcas
+{% endcomment %}
+
+<div class="gr-brand-logos-section" id="gr-brand-logos-container">
+  <div class="page-width">
+    {% if section.settings.title != blank %}
+      <h2 class="gr-section-title">{{ section.settings.title }}</h2>
+    {% endif %}
+    
+    {% if section.settings.description != blank %}
+      <div class="gr-section-description">{{ section.settings.description }}</div>
+    {% endif %}
+    
+    <div class="gr-brand-logos-grid" style="--columns: {{ section.settings.columns_desktop }};">
+      {% for block in section.blocks %}
+        <div class="gr-brand-logo" {{ block.shopify_attributes }}>
+          {% if block.settings.link != blank %}
+            <a href="{{ block.settings.link }}" class="gr-brand-link" {% if block.settings.open_in_new_tab %}target="_blank" rel="noopener"{% endif %}>
+          {% endif %}
+          
+          {% if block.settings.logo != blank %}
+            <img src="{{ block.settings.logo | img_url: 'medium' }}" alt="{{ block.settings.name }}" loading="lazy" class="gr-logo-image">
+          {% else %}
+            <div class="gr-logo-placeholder">{{ block.settings.name }}</div>
+          {% endif %}
+          
+          {% if block.settings.link != blank %}
+            </a>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<style>
+  .gr-brand-logos-section {
+    margin: 40px 0;
+  }
+  
+  .gr-section-title {
+    text-align: center;
+    margin-bottom: 10px;
+    color: {{ settings.gr_color_principal }};
+  }
+  
+  .gr-section-description {
+    text-align: center;
+    margin-bottom: 30px;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .gr-brand-logos-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    align-items: center;
+  }
+  
+  @media screen and (min-width: 750px) {
+    .gr-brand-logos-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  
+  @media screen and (min-width: 990px) {
+    .gr-brand-logos-grid {
+      grid-template-columns: repeat(var(--columns), 1fr);
+    }
+  }
+  
+  .gr-brand-logo {
+    text-align: center;
+    padding: 15px;
+  }
+  
+  .gr-brand-link {
+    display: block;
+    height: 100%;
+    transition: opacity 0.2s ease;
+  }
+  
+  .gr-brand-link:hover {
+    opacity: 0.8;
+  }
+  
+  .gr-logo-image {
+    max-width: 100%;
+    max-height: 80px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+  }
+  
+  .gr-logo-placeholder {
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f5f5f5;
+    border: 1px solid #e5e5e5;
+    border-radius: 4px;
+    font-weight: bold;
+    color: #777;
+  }
+</style>
+
+{% schema %}
+{
+  "name": "GR Logos de Marcas",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Título",
+      "default": "Nuestras Marcas"
+    },
+    {
+      "type": "textarea",
+      "id": "description",
+      "label": "Descripción"
+    },
+    {
+      "type": "range",
+      "id": "columns_desktop",
+      "min": 3,
+      "max": 8,
+      "step": 1,
+      "default": 5,
+      "label": "Columnas en escritorio"
+    }
+  ],
+  "blocks": [
+    {
+      "name": "Marca",
+      "type": "brand",
+      "settings": [
+        {
+          "type": "text",
+          "id": "name",
+          "label": "Nombre de la marca",
+          "default": "Nombre de la marca"
+        },
+        {
+          "type": "image_picker",
+          "id": "logo",
+          "label": "Logo"
+        },
+        {
+          "type": "url",
+          "id": "link",
+          "label": "Enlace"
+        },
+        {
+          "type": "checkbox",
+          "id": "open_in_new_tab",
+          "label": "Abrir en nueva pestaña",
+          "default": true
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "GR Logos de Marcas",
+      "blocks": [
+        {
+          "type": "brand"
+        },
+        {
+          "type": "brand"
+        },
+        {
+          "type": "brand"
+        },
+        {
+          "type": "brand"
+        },
+        {
+          "type": "brand"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

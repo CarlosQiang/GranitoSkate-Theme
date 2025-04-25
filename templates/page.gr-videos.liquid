@@ -1,0 +1,37 @@
+{% layout 'theme' %}
+
+<div class="page-width">
+  <div class="gr-videos-page">
+    <header class="gr-videos-header">
+      <h1>{{ page.title }}</h1>
+      {% if page.content != blank %}
+        <div class="gr-videos-description">
+          {{ page.content }}
+        </div>
+      {% endif %}
+    </header>
+    
+    {% section 'gr-video-gallery' %}
+  </div>
+</div>
+
+<style>
+  .gr-videos-page {
+    margin: 40px 0;
+  }
+  
+  .gr-videos-header {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  
+  .gr-videos-header h1 {
+    margin-bottom: 15px;
+    color: {{ settings.gr_color_principal }};
+  }
+  
+  .gr-videos-description {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+</style>

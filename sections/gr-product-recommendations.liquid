@@ -1,0 +1,172 @@
+{% comment %}
+Sección de recomendaciones de productos para GranitoSkate
+{% endcomment %}
+
+<div class="gr-product-recommendations" data-product-id="{{ product.id }}">
+<div class="page-width">
+<h2 class="gr-section-title">{{ section.settings.title }}</h2>
+
+<div class="gr-products-grid" id="gr-product-recommendations">
+  {% if recommendations.performed %}
+    {% if recommendations.products_count > 0 %}
+      {% for product in recommendations.products %}
+        <div class="gr-product-card">
+          <a href="{{ product.url }}" class="gr-product-card-link">
+            <div class="gr-product-card-image">
+              {% if product.featured_image %}
+                <img 
+                  src="{{ product.featured_image | img_url: '300x300', crop: 'center' }}" 
+                  alt="{{ product.featured_image.alt | escape }}"
+                >
+              {% else %}
+                <div class="gr-product-card-no-image">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                    <polyline points="21 15 16 10 5 21"></polyline>
+                  </svg>
+                </div>
+              {% endif %}
+            </div>
+            
+            <div class="gr-product-card-info">
+              <h3 class="gr-product-card-title">{{ product.title }}</h3>
+              
+              <div class="gr-product-card-price">
+                {% if product.price_varies %}
+                  <span class="gr-search-result-price-from">{{ section.settings.from_text }}</span>
+                  {{ product.price_min | money }}
+                {% else %}
+                  {{ product.price | money }}
+                {% endif %}
+              </div>
+              {% if product.vendor != blank and section.settings.show_vendor %}
+                <div class="gr-search-result-vendor">{{ product.vendor }}</div>
+              {% endif %}
+            </div>
+          </a>
+          
+          {% if settings.gr_enable_wishlist %}
+            {% render 'gr-wishlist-button', product: product %}
+          {% endif %}
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="gr-no-recommendations">
+        <p>{{ section.settings.no_recommendations_text }}</p>
+      </div>
+    {% endif %}
+  {% else %}
+    <div class="gr-loading-recommendations">
+      <div class="gr-loading-spinner"></div>
+      <p>{{ section.settings.loading_text }}</p>
+    </div>
+  {% endif %}
+</div>
+</div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+const productId = document.querySelector('.gr-product-recommendations').dataset.productId;
+const recommendationsContainer = document.getElementById('gr-product-recommendations');
+
+if (productId && recommendationsContainer && window.granitoAPI) {
+  window.granitoAPI.getProductRecommendations(productId)
+    .then(response => {
+      if (!response.error && response.products && response.products.length > 0) {
+        let productsHTML = '';
+        
+        response.products.forEach(product => {
+          let priceHTML = '';
+          
+          if (product.compare_at_price > product.price) {
+            priceHTML = `
+              <span class="gr-product-card-price-sale">${product.price}</span>
+              <span class="gr-product-card-price-compare">${product.compare_at_price}</span>
+            `;
+          } else {
+            priceHTML = `<span class="gr-product-card-price-regular">${product.price}</span>`;
+          }
+          
+          productsHTML += `
+            <div class="gr-product-card">
+              <a href="${product.url}" class="gr-product-card-link">
+                <div class="gr-product-card-image">
+                  ${product.featured_image 
+                    ? `<img src="${product.featured_image}" alt="${product.title}">`
+                    : `<div class="gr-product-card-no-image">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                          <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                          <polyline points="21 15 16 10 5 21"></polyline>
+                        </svg>
+                      </div>`
+                  }
+                </div>
+                
+                <div class="gr-product-card-info">
+                  <h3 class="gr-product-card-title">${product.title}</h3>
+                  
+                  <div class="gr-product-card-price">
+                    ${priceHTML}
+                  </div>
+                </div>
+              </a>
+              
+              ${window.settings && window.settings.gr_enable_wishlist 
+                ? `<button class="gr-wishlist-button" data-product-id="${product.id}" aria-label="Añadir a la lista de deseos">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                      </svg>
+                    </button>`
+                : ''}
+            </div>
+          `;
+        });
+        
+        recommendationsContainer.innerHTML = productsHTML;
+      } else {
+        recommendationsContainer.innerHTML = '<p>No se encontraron recomendaciones.</p>';
+      }
+    })
+    .catch(error => {
+      console.error('Error al cargar recomendaciones:', error);
+      recommendationsContainer.innerHTML = '<p>Error al cargar las recomendaciones.</p>';
+    });
+}
+});
+</script>
+
+{% schema %}
+{
+"name": "GR Recomendaciones",
+"tag": "section",
+"class": "section",
+"settings": [
+{
+  "type": "text",
+  "id": "title",
+  "label": "Título",
+  "default": "También te puede interesar"
+},
+{
+  "type": "text",
+  "id": "no_recommendations_text",
+  "label": "Texto si no hay recomendaciones",
+  "default": "No hay recomendaciones disponibles."
+},
+{
+  "type": "text",
+  "id": "loading_text",
+  "label": "Texto de carga",
+  "default": "Cargando recomendaciones..."
+}
+],
+"presets": [
+{
+  "name": "GR Recomendaciones"
+}
+]
+}
+{% endschema %}

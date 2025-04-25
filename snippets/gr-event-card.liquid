@@ -1,0 +1,73 @@
+{% comment %}
+  Tarjeta para mostrar un evento
+  Uso: {% render 'gr-event-card', event: event %}
+{% endcomment %}
+
+<div class="gr-event-card">
+  <div class="gr-event-date">
+    <div class="gr-event-day">{{ event.fecha_inicio | date: "%d" }}</div>
+    <div class="gr-event-month">{{ event.fecha_inicio | date: "%b" }}</div>
+  </div>
+  
+  <div class="gr-event-details">
+    <h3 class="gr-event-title">{{ event.titulo }}</h3>
+    
+    {% if event.descripcion %}
+      <div class="gr-event-description">{{ event.descripcion }}</div>
+    {% endif %}
+    
+    <div class="gr-event-time">
+      {{ event.fecha_inicio | date: "%H:%M" }} - {{ event.fecha_fin | date: "%H:%M" }}
+    </div>
+  </div>
+</div>
+
+<style>
+  .gr-event-card {
+    display: flex;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 15px;
+  }
+  
+  .gr-event-date {
+    background-color: {{ settings.gr_color_principal }};
+    color: white;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 70px;
+  }
+  
+  .gr-event-day {
+    font-size: 1.5em;
+    font-weight: bold;
+  }
+  
+  .gr-event-month {
+    text-transform: uppercase;
+  }
+  
+  .gr-event-details {
+    padding: 15px;
+    flex-grow: 1;
+  }
+  
+  .gr-event-title {
+    margin-top: 0;
+    margin-bottom: 5px;
+  }
+  
+  .gr-event-description {
+    margin-bottom: 10px;
+    font-size: 0.9em;
+  }
+  
+  .gr-event-time {
+    font-size: 0.8em;
+    color: #777;
+  }
+</style>

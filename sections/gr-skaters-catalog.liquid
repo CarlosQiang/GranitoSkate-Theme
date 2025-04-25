@@ -1,0 +1,292 @@
+{% comment %}
+  Sección de catálogo de skaters
+{% endcomment %}
+
+<div class="gr-skaters-section py-12">
+  <div class="page-width">
+    {% if section.settings.title != blank %}
+      <h2 class="gr-section-title text-3xl font-bold text-center mb-4">{{ section.settings.title }}</h2>
+    {% endif %}
+    
+    {% if section.settings.description != blank %}
+      <div class="gr-section-description text-center text-gray-600 mb-8">{{ section.settings.description }}</div>
+    {% endif %}
+    
+    <div class="gr-skaters-loading text-center text-gray-500">Cargando skaters...</div>
+    
+    <div class="gr-skaters-grid hidden grid-cols-1 sm:grid-cols-2 lg:grid-cols-{{ section.settings.columns_desktop }} gap-6">
+      <!-- Los skaters se cargarán aquí dinámicamente -->
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    if (window.granitoAPI) {
+      const skatersContainer = document.getElementById('gr-skaters-container');
+      const loadingElement = skatersContainer.querySelector('.gr-skaters-loading');
+      const skatersGrid = skatersContainer.querySelector('.gr-skaters-grid');
+      
+      // Cargar skaters desde la API
+      window.granitoAPI.getSkaters()
+        .then(response => {
+          loadingElement.style.display = 'none';
+          
+          if (response.error) {
+            skatersGrid.innerHTML = '<p>Error al cargar los skaters.</p>';
+            skatersGrid.style.display = 'block';
+            return;
+          }
+          
+          if (response.length === 0) {
+            skatersGrid.innerHTML = '<p>No hay skaters disponibles.</p>';
+            skatersGrid.style.display = 'block';
+            return;
+          }
+          
+          // Crear HTML para cada skater
+          let skatersHTML = '';
+          
+          response.forEach(skater => {
+            skatersHTML += `
+              <div class="gr-skater-card border border-gray-200 rounded-lg overflow-hidden shadow-md transition-transform transform hover:translate-y-[-5px] hover:shadow-lg">
+                <a href="/pages/skater?id=${skater.id}" class="gr-skater-link block">
+                  <div class="gr-skater-image relative pb-[100%] overflow-hidden">
+                    <img src="${skater.imagen_url || '/placeholder.svg?height=300&width=300'}" alt="${skater.nombre}" loading="lazy" class="absolute top-0 left-0 w-full h-full object-cover transition-transform transform hover:scale-110">
+                  </div>
+                  <div class="gr-skater-info p-4 text-center">
+                    <h3 class="gr-skater-name text-xl font-semibold">${skater.nombre}</h3>
+                    <p class="gr-skater-style text-gray-600">${skater.estilo || ''}</p>
+                  </div>
+                </a>
+              </div>
+            `;
+          });
+          
+          skatersGrid.innerHTML = skatersHTML;
+          skatersGrid.style.display = 'grid';
+        })
+        .catch(error => {
+          console.error('Error al cargar skaters:', error);
+          loadingElement.textContent = 'Error al cargar los skaters.';
+        });
+    } else {
+      // Si la API no está disponible, mostrar skaters estáticos de ejemplo
+      const skatersContainer = document.getElementById('gr-skaters-container');
+      const loadingElement = skatersContainer.querySelector('.gr-skaters-loading');
+      const skatersGrid = skatersContainer.querySelector('.gr-skaters-grid');
+      
+      loadingElement.style.display = 'none';
+      
+      // Datos de ejemplo
+      const exampleSkaters = [
+        {% for block in section.blocks %}
+          {
+            id: '{{ block.id }}',
+            nombre: '{{ block.settings.nombre }}',
+            estilo: '{{ block.settings.estilo }}',
+            imagen_url: '{{ block.settings.imagen | img_url: "master" }}'
+          }{% unless forloop.last %},{% endunless %}
+        {% endfor %}
+      ];
+      
+      if (exampleSkaters.length === 0) {
+        skatersGrid.innerHTML = '<p>No hay skaters disponibles.</p>';
+        skatersGrid.style.display = 'block';
+        return;
+      }
+      
+      // Crear HTML para cada skater
+      let skatersHTML = '';
+      
+      exampleSkaters.forEach(skater => {
+        skatersHTML += `
+          <div class="gr-skater-card border border-gray-200 rounded-lg overflow-hidden shadow-md transition-transform transform hover:translate-y-[-5px] hover:shadow-lg">
+            <a href="/pages/skater?id=${skater.id}" class="gr-skater-link block">
+              <div class="gr-skater-image relative pb-[100%] overflow-hidden">
+                <img src="${skater.imagen_url || '/placeholder.svg?height=300&width=300'}" alt="${skater.nombre}" loading="lazy" class="absolute top-0 left-0 w-full h-full object-cover transition-transform transform hover:scale-110">
+              </div>
+              <div class="gr-skater-info p-4 text-center">
+                <h3 class="gr-skater-name text-xl font-semibold">${skater.nombre}</h3>
+                <p class="gr-skater-style text-gray-600">${skater.estilo || ''}</p>
+              </div>
+            </a>
+          </div>
+        `;
+      });
+      
+      skatersGrid.innerHTML = skatersHTML;
+      skatersGrid.style.display = 'grid';
+    }
+  });
+</script>
+
+<style>
+  .gr-skaters-section {
+    margin: 40px 0;
+  }
+  
+  .gr-section-title {
+    text-align: center;
+    margin-bottom: 10px;
+    color: {{ settings.gr_color_principal }};
+  }
+  
+  .gr-section-description {
+    text-align: center;
+    margin-bottom: 30px;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .gr-skaters-loading {
+    text-align: center;
+    padding: 20px;
+  }
+  
+  .gr-skaters-grid {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 20px;
+  }
+  
+  @media screen and (min-width: 750px) {
+    .gr-skaters-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  @media screen and (min-width: 990px) {
+    .gr-skaters-grid {
+      grid-template-columns: repeat({{ section.settings.columns_desktop }}, 1fr);
+    }
+  }
+  
+  .gr-skater-card {
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .gr-skater-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  .gr-skater-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+  }
+  
+  .gr-skater-image {
+    width: 100%;
+    padding-top: 100%;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .gr-skater-image img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+  
+  .gr-skater-card:hover .gr-skater-image img {
+    transform: scale(1.05);
+  }
+  
+  .gr-skater-info {
+    padding: 15px;
+    text-align: center;
+  }
+  
+  .gr-skater-name {
+    margin: 0 0 5px;
+    font-size: 1.2em;
+  }
+  
+  .gr-skater-style {
+    margin: 0;
+    color: #777;
+    font-size: 0.9em;
+  }
+</style>
+
+{% schema %}
+{
+  "name": "GR Catálogo de Skaters",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Título",
+      "default": "Nuestros Skaters"
+    },
+    {
+      "type": "textarea",
+      "id": "description",
+      "label": "Descripción",
+      "default": "Conoce a los mejores skaters de nuestra comunidad"
+    },
+    {
+      "type": "range",
+      "id": "columns_desktop",
+      "min": 1,
+      "max": 5,
+      "step": 1,
+      "default": 3,
+      "label": "Columnas en escritorio"
+    }
+  ],
+  "blocks": [
+    {
+      "name": "Skater",
+      "type": "skater",
+      "settings": [
+        {
+          "type": "text",
+          "id": "nombre",
+          "label": "Nombre",
+          "default": "Nombre del Skater"
+        },
+        {
+          "type": "text",
+          "id": "estilo",
+          "label": "Estilo",
+          "default": "Street"
+        },
+        {
+          "type": "image_picker",
+          "id": "imagen",
+          "label": "Imagen"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "GR Catálogo de Skaters",
+      "blocks": [
+        {
+          "type": "skater"
+        },
+        {
+          "type": "skater"
+        },
+        {
+          "type": "skater"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

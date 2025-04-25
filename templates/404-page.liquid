@@ -1,0 +1,36 @@
+{% layout 'theme' %}
+
+<div class="gr-404-page">
+  <div class="gr-404-content">
+    <h1>Página no encontrada</h1>
+    <p>Lo sentimos, la página que estás buscando no existe.</p>
+    <a href="/" class="gr-button">Volver al inicio</a>
+  </div>
+</div>
+
+<style>
+  .gr-404-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 50vh;
+    text-align: center;
+    padding: 20px;
+  }
+
+  .gr-404-content {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .gr-404-content h1 {
+    font-size: 2.5em;
+    margin-bottom: 20px;
+  }
+
+  .gr-404-content p {
+    font-size: 1.2em;
+    margin-bottom: 30px;
+  }
+</style>

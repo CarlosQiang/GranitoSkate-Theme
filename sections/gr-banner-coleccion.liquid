@@ -1,0 +1,205 @@
+{% schema %}
+{
+  "name": "GR Banner de Colección",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Título",
+      "default": "Colección"
+    },
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "Colección"
+    },
+    {
+      "type": "select",
+      "id": "height",
+      "options": [
+        {
+          "value": "adapt",
+          "label": "Adaptarse a la primera imagen"
+        },
+        {
+          "value": "small",
+          "label": "Pequeño"
+        },
+        {
+          "value": "medium",
+          "label": "Mediano"
+        },
+        {
+          "value": "large",
+          "label": "Grande"
+        }
+      ],
+      "default": "medium",
+      "label": "Altura del banner"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_description",
+      "default": true,
+      "label": "Mostrar descripción de la colección"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_button",
+      "default": true,
+      "label": "Mostrar botón"
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "default": "Ver colección",
+      "label": "Texto del botón"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Color de fondo",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Color del texto",
+      "default": "#ffffff"
+    }
+  ],
+  "presets": [
+    {
+      "name": "GR Banner de Colección",
+      "category": "Colección"
+    }
+  ]
+}
+{% endschema %}
+
+<div class="gr-banner-coleccion" style="background-color: {{ section.settings.background_color }}; color: {{ section.settings.text_color }};">
+  {% if section.settings.collection != blank %}
+    {% assign collection = collections[section.settings.collection] %}
+    <div class="page-width">
+      <div class="gr-banner-coleccion__container">
+        <div class="gr-banner-coleccion__content">
+          <h2 class="gr-banner-coleccion__title">{{ section.settings.title | default: collection.title }}</h2>
+          
+          {% if section.settings.show_description and collection.description != blank %}
+            <div class="gr-banner-coleccion__description">
+              {{ collection.description }}
+            </div>
+          {% endif %}
+          
+          {% if section.settings.show_button %}
+            <a href="{{ collection.url }}" class="gr-banner-coleccion__button button">
+              {{ section.settings.button_label }}
+            </a>
+          {% endif %}
+        </div>
+        
+        {% if collection.image %}
+          <div class="gr-banner-coleccion__image-container">
+            <img 
+              srcset="{{ collection.image | img_url: '400x' }} 400w,
+                      {{ collection.image | img_url: '600x' }} 600w,
+                      {{ collection.image | img_url: '800x' }} 800w,
+                      {{ collection.image | img_url: '1000x' }} 1000w"
+              src="{{ collection.image | img_url: '800x' }}"
+              alt="{{ collection.title | escape }}"
+              loading="lazy"
+              width="{{ collection.image.width }}"
+              height="{{ collection.image.height }}"
+              class="gr-banner-coleccion__image"
+            >
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  {% else %}
+    <div class="page-width">
+      <div class="placeholder-container">
+        <div class="placeholder">
+          <div class="placeholder-content">
+            <h2 class="placeholder-title">{{ 'collections.general.title' | t }}</h2>
+            <p>{{ 'collections.general.no_matches' | t }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+</div>
+
+<style>
+  .gr-banner-coleccion {
+    padding: 60px 0;
+  }
+  
+  .gr-banner-coleccion__container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 30px;
+  }
+  
+  .gr-banner-coleccion__content {
+    flex: 1;
+    min-width: 300px;
+  }
+  
+  .gr-banner-coleccion__title {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 32px;
+    font-weight: 700;
+  }
+  
+  .gr-banner-coleccion__description {
+    margin-bottom: 25px;
+    line-height: 1.5;
+  }
+  
+  .gr-banner-coleccion__button {
+    display: inline-block;
+    padding: 12px 24px;
+    background-color: #d29a43;
+    color: #ffffff;
+    text-decoration: none;
+    border-radius: 4px;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+  }
+  
+  .gr-banner-coleccion__button:hover {
+    background-color: #b88535;
+  }
+  
+  .gr-banner-coleccion__image-container {
+    flex: 1;
+    min-width: 300px;
+  }
+  
+  .gr-banner-coleccion__image {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    object-fit: cover;
+  }
+  
+  .placeholder-container {
+    padding: 40px 0;
+    text-align: center;
+  }
+  
+  @media screen and (max-width: 749px) {
+    .gr-banner-coleccion {
+      padding: 40px 0;
+    }
+    
+    .gr-banner-coleccion__title {
+      font-size: 24px;
+    }
+  }
+</style>
